@@ -3,7 +3,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
