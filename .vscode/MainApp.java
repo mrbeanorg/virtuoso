@@ -15,7 +15,7 @@ public class MainApp extends JFrame {
     private String loggedInUser = "alan";
 
     public MainApp() {
-        setTitle("Secure Password Generator & Vault (" + loggedInUser + ")");
+        setTitle("Virtuoso - Secure Password Generator & Vault");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 740);
         setLocationRelativeTo(null);
@@ -25,6 +25,7 @@ public class MainApp extends JFrame {
 
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
+        mainContainer.setBackground(new Color(15, 18, 22)); 
 
         loginPanel = new LoginPanel(this);
         registerPanel = new RegisterPanel(this);
@@ -39,7 +40,7 @@ public class MainApp extends JFrame {
 
     public void setLoggedInUser(String username, boolean showBanner) {
         this.loggedInUser = username;
-        setTitle("Secure Password Generator & Vault (" + loggedInUser + ")");
+        setTitle("Virtuoso - Logged in as: " + loggedInUser);
         dashboardPanel.updateUserGreeting(username, showBanner);
     }
 
@@ -72,7 +73,25 @@ public class MainApp extends JFrame {
         loginPanel.setLoginUsername(username);
     }
 
+    private static void setupGlobalUI() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            Font modernFont = new Font("Segoe UI", Font.PLAIN, 14);
+            java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+            while (keys.hasMoreElements()) {
+                Object key = keys.nextElement();
+                Object value = UIManager.get(key);
+                if (value instanceof javax.swing.plaf.FontUIResource) {
+                    UIManager.put(key, modernFont);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
+        setupGlobalUI();
         SwingUtilities.invokeLater(() -> {
             new MainApp().setVisible(true);
         });

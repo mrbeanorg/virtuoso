@@ -40,23 +40,22 @@ public class PasswordVaultPanel extends JPanel {
     public PasswordVaultPanel(String activeUser, Runnable onBackToMenu) {
         this.loggedInUser = activeUser;
 
-        setLayout(new BorderLayout(15, 15));
+        setLayout(new BorderLayout(20, 20));
         setBackground(new Color(20, 24, 29));
-        setBorder(new EmptyBorder(18, 20, 18, 20));
+        setBorder(new EmptyBorder(25, 25, 25, 25));
 
         Color cardBg = new Color(28, 33, 40);
-        Color borderLine = new Color(48, 55, 65);
-        Color textColor = new Color(220, 230, 240);
+        Color textColor = new Color(240, 245, 250);
 
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-        JLabel headerTitle = new JLabel("Secure Password Generators for User: " + loggedInUser.toUpperCase());
-        headerTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        JLabel headerTitle = new JLabel("Secure Password Vault - " + loggedInUser.toUpperCase());
+        headerTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         headerTitle.setForeground(textColor);
 
-        JButton dashboardBtn = createStyledButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
-        dashboardBtn.setPreferredSize(new Dimension(110, 32));
+        JButton dashboardBtn = LoginPanel.createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
+        dashboardBtn.setPreferredSize(new Dimension(130, 38));
         dashboardBtn.addActionListener(e -> {
             if (onBackToMenu != null) onBackToMenu.run();
         });
@@ -65,112 +64,99 @@ public class PasswordVaultPanel extends JPanel {
         headerPanel.add(dashboardBtn, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
 
-        JPanel splitContainer = new JPanel(new GridLayout(1, 2, 20, 0));
+        JPanel splitContainer = new JPanel(new GridLayout(1, 2, 25, 0));
         splitContainer.setOpaque(false);
 
-        JPanel leftPanel = new JPanel();
+        JPanel leftPanel = createRoundedCard(cardBg);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(cardBg);
-        leftPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderLine, 1),
-                BorderFactory.createEmptyBorder(15, 18, 15, 18)
-        ));
+        leftPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         JLabel leftTitle = new JLabel("Generator & Account Details");
-        leftTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        leftTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         leftTitle.setForeground(textColor);
         leftTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        appNameField = createStyledTextField("Google");
-        accountUsernameField = createStyledTextField("alan.wilson@gmail.com");
+        appNameField = LoginPanel.createPlaceholderTextField("E.g. Google, GitHub");
+        accountUsernameField = LoginPanel.createPlaceholderTextField("E.g. alan.wilson@gmail.com");
 
         useUpperCB = createStyledCheckBox("Uppercase (A-Z)", true);
         useDigitsCB = createStyledCheckBox("Digits (0-9)", true);
         useSymbolsCB = createStyledCheckBox("Symbols (!@#$)", true);
 
         ChangeListener optionChangeListener = (ChangeEvent e) -> generatePassword();
-
         useUpperCB.addChangeListener(optionChangeListener);
         useDigitsCB.addChangeListener(optionChangeListener);
         useSymbolsCB.addChangeListener(optionChangeListener);
 
         lengthSpinner = new JSpinner(new SpinnerNumberModel(14, 6, 64, 1));
-        lengthSpinner.setMaximumSize(new Dimension(80, 28));
-        lengthSpinner.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lengthSpinner.setBackground(new Color(20, 25, 32));
-        lengthSpinner.setForeground(Color.WHITE);
-        lengthSpinner.addChangeListener(e -> generatePassword());
+        lengthSpinner.setMaximumSize(new Dimension(80, 32));
+        lengthSpinner.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lengthSpinner.setBorder(BorderFactory.createEmptyBorder());
 
-        JPanel lengthRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel lengthRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         lengthRow.setOpaque(false);
         lengthRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel lenLabel = createLabel("Length:");
-        lengthRow.add(lenLabel);
+        lengthRow.add(createLabel("Length:"));
         lengthRow.add(lengthSpinner);
 
         strengthMeter = new StrengthBarPanel();
         strengthTextLabel = new JLabel("STRONG");
-        strengthTextLabel.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        strengthTextLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         strengthTextLabel.setForeground(new Color(46, 204, 113));
 
         JPanel strengthTextRow = new JPanel(new BorderLayout());
         strengthTextRow.setOpaque(false);
         strengthTextRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         strengthTextRow.setMaximumSize(new Dimension(420, 20));
-
-        JLabel strHeader = createLabel("Password Strength:");
-        strengthTextRow.add(strHeader, BorderLayout.WEST);
+        strengthTextRow.add(createLabel("Password Strength:"), BorderLayout.WEST);
         strengthTextRow.add(strengthTextLabel, BorderLayout.EAST);
 
-        JButton generateBtn = createStyledButton("⚡ Generate Password", new Color(39, 138, 90), Color.WHITE);
+        JButton generateBtn = LoginPanel.createButton("⚡ Generate Password", new Color(39, 138, 90), Color.WHITE);
         generateBtn.addActionListener(e -> generatePassword());
 
         generatedPasswordDisplay = new JLabel("R(C$8EJsRX;EBK", SwingConstants.CENTER);
-        generatedPasswordDisplay.setFont(new Font("Consolas", Font.BOLD, 16));
-        generatedPasswordDisplay.setForeground(Color.WHITE);
+        generatedPasswordDisplay.setFont(new Font("Consolas", Font.BOLD, 18));
+        generatedPasswordDisplay.setForeground(new Color(240, 245, 250));
         generatedPasswordDisplay.setAlignmentX(Component.CENTER_ALIGNMENT);
-        generatedPasswordDisplay.setPreferredSize(new Dimension(300, 36));
+        generatedPasswordDisplay.setPreferredSize(new Dimension(300, 40));
 
-        JButton saveBtn = createStyledButton("💾 Save Password to Vault", new Color(60, 80, 150), Color.WHITE);
+        JButton saveBtn = LoginPanel.createButton("💾 Save Password to Vault", new Color(60, 100, 180), Color.WHITE);
         saveBtn.addActionListener(e -> saveGeneratedPasswordToDB());
 
         leftPanel.add(leftTitle);
-        leftPanel.add(Box.createVerticalStrut(15));
+        leftPanel.add(Box.createVerticalStrut(20));
         leftPanel.add(createLabel("Target App/Service Name:"));
-        leftPanel.add(Box.createVerticalStrut(4));
+        leftPanel.add(Box.createVerticalStrut(6));
         leftPanel.add(appNameField);
-        leftPanel.add(Box.createVerticalStrut(12));
+        leftPanel.add(Box.createVerticalStrut(15));
         leftPanel.add(createLabel("Account Username:"));
-        leftPanel.add(Box.createVerticalStrut(4));
+        leftPanel.add(Box.createVerticalStrut(6));
         leftPanel.add(accountUsernameField);
-        leftPanel.add(Box.createVerticalStrut(12));
+        leftPanel.add(Box.createVerticalStrut(20));
         leftPanel.add(createLabel("Password Options:"));
-        leftPanel.add(Box.createVerticalStrut(4));
+        leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(useUpperCB);
         leftPanel.add(useDigitsCB);
         leftPanel.add(useSymbolsCB);
-        leftPanel.add(Box.createVerticalStrut(10));
-        leftPanel.add(lengthRow);
-        leftPanel.add(Box.createVerticalStrut(12));
-        leftPanel.add(strengthTextRow);
-        leftPanel.add(Box.createVerticalStrut(4));
-        leftPanel.add(strengthMeter);
         leftPanel.add(Box.createVerticalStrut(15));
+        leftPanel.add(lengthRow);
+        leftPanel.add(Box.createVerticalStrut(20));
+        leftPanel.add(strengthTextRow);
+        leftPanel.add(Box.createVerticalStrut(8));
+        leftPanel.add(strengthMeter);
+        leftPanel.add(Box.createVerticalStrut(25));
         leftPanel.add(generateBtn);
-        leftPanel.add(Box.createVerticalStrut(12));
+        leftPanel.add(Box.createVerticalStrut(15));
         leftPanel.add(generatedPasswordDisplay);
-        leftPanel.add(Box.createVerticalStrut(12));
+        leftPanel.add(Box.createVerticalStrut(15));
         leftPanel.add(saveBtn);
 
-        JPanel rightPanel = new JPanel(new BorderLayout(0, 12));
-        rightPanel.setBackground(cardBg);
-        rightPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderLine, 1),
-                BorderFactory.createEmptyBorder(15, 18, 15, 18)
-        ));
+        JPanel rightPanel = createRoundedCard(cardBg);
+        rightPanel.setLayout(new BorderLayout(0, 15));
+        rightPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         JLabel rightTitle = new JLabel("Saved Account Vault");
-        rightTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        rightTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         rightTitle.setForeground(textColor);
 
         String[] columns = {"ID", "App/Service", "Account Username", "Password", "Action"};
@@ -184,15 +170,27 @@ public class PasswordVaultPanel extends JPanel {
         vaultTable = new JTable(vaultTableModel);
         vaultTable.setBackground(new Color(20, 25, 32));
         vaultTable.setForeground(textColor);
+        vaultTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        vaultTable.setRowHeight(40); 
+        vaultTable.setShowGrid(false); 
+        vaultTable.setIntercellSpacing(new Dimension(0, 0));
+        vaultTable.setSelectionBackground(new Color(46, 117, 89));
+        vaultTable.setSelectionForeground(Color.WHITE);
+
         vaultTable.getTableHeader().setBackground(new Color(35, 42, 52));
         vaultTable.getTableHeader().setForeground(textColor);
-        vaultTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        vaultTable.setRowHeight(32);
-        vaultTable.setGridColor(borderLine);
+        vaultTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        vaultTable.getTableHeader().setBorder(BorderFactory.createEmptyBorder());
+        vaultTable.getTableHeader().setPreferredSize(new Dimension(0, 40));
 
         vaultTable.getColumnModel().getColumn(0).setMinWidth(0);
         vaultTable.getColumnModel().getColumn(0).setMaxWidth(0);
         vaultTable.getColumnModel().getColumn(0).setWidth(0);
+
+        DefaultTableCellRenderer paddedRenderer = new DefaultTableCellRenderer();
+        paddedRenderer.setBorder(new EmptyBorder(0, 10, 0, 10));
+        vaultTable.getColumnModel().getColumn(1).setCellRenderer(paddedRenderer);
+        vaultTable.getColumnModel().getColumn(2).setCellRenderer(paddedRenderer);
 
         vaultTable.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -203,29 +201,30 @@ public class PasswordVaultPanel extends JPanel {
                 } else {
                     l.setText("••••••••••");
                 }
-                l.setFont(new Font("Consolas", Font.PLAIN, 13));
+                l.setFont(new Font("Consolas", Font.PLAIN, 14));
+                l.setBorder(new EmptyBorder(0, 10, 0, 10));
                 return l;
             }
         });
 
         vaultTable.getColumnModel().getColumn(4).setCellRenderer(new EyeButtonRenderer());
         vaultTable.getColumnModel().getColumn(4).setCellEditor(new EyeButtonEditor(new JCheckBox()));
-        vaultTable.getColumnModel().getColumn(4).setMaxWidth(45);
+        vaultTable.getColumnModel().getColumn(4).setMaxWidth(50);
 
         JScrollPane tableScroll = new JScrollPane(vaultTable);
         tableScroll.getViewport().setBackground(new Color(20, 25, 32));
-        tableScroll.setBorder(BorderFactory.createLineBorder(borderLine, 1));
+        tableScroll.setBorder(BorderFactory.createEmptyBorder()); 
 
-        JButton copyBtn = createStyledButton("📋 Copy Password", new Color(55, 75, 95), Color.WHITE);
+        JButton copyBtn = LoginPanel.createButton("📋 Copy Selected Password", new Color(55, 75, 95), Color.WHITE);
         copyBtn.addActionListener(e -> copySelectedPassword());
 
-        JButton deleteSelectedBtn = createStyledButton("🗑️ Delete Selected", new Color(185, 80, 80), Color.WHITE);
+        JButton deleteSelectedBtn = LoginPanel.createButton("🗑️ Delete Selected", new Color(185, 80, 80), Color.WHITE);
         deleteSelectedBtn.addActionListener(e -> deleteSelectedPasswordFromDB());
 
-        JButton deleteAllBtn = createStyledButton("⚠️ Delete All Passwords", new Color(120, 30, 30), Color.WHITE);
+        JButton deleteAllBtn = LoginPanel.createButton("⚠️ Clear Vault", new Color(120, 30, 30), Color.WHITE);
         deleteAllBtn.addActionListener(e -> deleteAllUserPasswordsFromDB());
 
-        JPanel actionButtonsPanel = new JPanel(new GridLayout(3, 1, 0, 8));
+        JPanel actionButtonsPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         actionButtonsPanel.setOpaque(false);
         actionButtonsPanel.add(copyBtn);
         actionButtonsPanel.add(deleteSelectedBtn);
@@ -244,50 +243,38 @@ public class PasswordVaultPanel extends JPanel {
         loadVaultFromDB();
     }
 
-    private JLabel createLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        label.setForeground(new Color(170, 185, 200));
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
+    private JPanel createRoundedCard(Color bg) {
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        panel.setOpaque(false);
+        return panel;
     }
 
-    private JTextField createStyledTextField(String placeholder) {
-        JTextField tf = new JTextField(placeholder);
-        tf.setMaximumSize(new Dimension(420, 34));
-        tf.setBackground(new Color(20, 25, 32));
-        tf.setForeground(Color.WHITE);
-        tf.setCaretColor(Color.WHITE);
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tf.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(48, 55, 65), 1),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-        tf.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return tf;
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        label.setForeground(new Color(150, 165, 180));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
 
     private JCheckBox createStyledCheckBox(String text, boolean selected) {
         JCheckBox cb = new JCheckBox(text, selected);
         cb.setOpaque(false);
         cb.setForeground(new Color(200, 215, 230));
-        cb.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cb.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cb.setFocusPainted(false);
         cb.setAlignmentX(Component.LEFT_ALIGNMENT);
         return cb;
-    }
-
-    private JButton createStyledButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text);
-        btn.setMaximumSize(new Dimension(420, 36));
-        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setBackground(bg);
-        btn.setForeground(fg);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
     }
 
     private void generatePassword() {
@@ -341,7 +328,7 @@ public class PasswordVaultPanel extends JPanel {
         String accUser = accountUsernameField.getText().trim();
         String pwd = generatedPasswordDisplay.getText().trim();
 
-        if (appName.isEmpty() || accUser.isEmpty()) {
+        if (appName.isEmpty() || accUser.isEmpty() || appName.equals("E.g. Google, GitHub") || accUser.equals("E.g. alan.wilson@gmail.com")) {
             JOptionPane.showMessageDialog(this, "Please enter both App Name and Account Username!", "Missing Input", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -537,7 +524,7 @@ public class PasswordVaultPanel extends JPanel {
 
             int w = getWidth();
             int h = getHeight();
-            int gap = 6;
+            int gap = 8;
             int barWidth = (w - (3 * gap)) / 4;
 
             Color[] colors = {
@@ -554,7 +541,7 @@ public class PasswordVaultPanel extends JPanel {
                 } else {
                     g2.setColor(new Color(45, 52, 62));
                 }
-                g2.fill(new RoundRectangle2D.Float(x, 0, barWidth, h, 4, 4));
+                g2.fill(new RoundRectangle2D.Float(x, 0, barWidth, h, 6, 6));
             }
             g2.dispose();
         }
@@ -565,13 +552,18 @@ public class PasswordVaultPanel extends JPanel {
             setOpaque(true);
             setBorderPainted(false);
             setFocusPainted(false);
-            setBackground(new Color(35, 42, 52));
+            setBackground(new Color(20, 25, 32));
             setForeground(Color.WHITE);
         }
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             setText(value != null ? value.toString() : "👁");
+            if(isSelected) {
+                setBackground(new Color(46, 117, 89));
+            } else {
+                setBackground(new Color(20, 25, 32));
+            }
             return this;
         }
     }
@@ -588,7 +580,7 @@ public class PasswordVaultPanel extends JPanel {
             button.setOpaque(true);
             button.setBorderPainted(false);
             button.setFocusPainted(false);
-            button.setBackground(new Color(35, 42, 52));
+            button.setBackground(new Color(46, 117, 89));
             button.setForeground(Color.WHITE);
 
             button.addActionListener(e -> fireEditingStopped());

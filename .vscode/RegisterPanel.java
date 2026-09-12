@@ -12,15 +12,26 @@ public class RegisterPanel extends StyledBackgroundPanel {
     private JTextField emailField;
 
     public RegisterPanel(MainApp app) {
-        JPanel card = new JPanel();
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setOpaque(false);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(28, 33, 40, 220));
-        card.setBorder(new EmptyBorder(30, 35, 30, 35));
-        card.setPreferredSize(new Dimension(340, 480));
+        card.setBackground(new Color(28, 33, 40, 240));
+        card.setBorder(new EmptyBorder(40, 40, 40, 40));
+        card.setPreferredSize(new Dimension(360, 480));
 
         JLabel titleLabel = new JLabel("CREATE ACCOUNT");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(220, 230, 240));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(240, 245, 250));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         usernameField = LoginPanel.createPlaceholderTextField("Username");
@@ -34,13 +45,13 @@ public class RegisterPanel extends StyledBackgroundPanel {
         backBtn.addActionListener(e -> app.showView("LOGIN"));
 
         card.add(titleLabel);
-        card.add(Box.createVerticalStrut(25));
+        card.add(Box.createVerticalStrut(30));
         card.add(usernameField);
         card.add(Box.createVerticalStrut(15));
         card.add(passwordField);
         card.add(Box.createVerticalStrut(15));
         card.add(emailField);
-        card.add(Box.createVerticalStrut(25));
+        card.add(Box.createVerticalStrut(30));
         card.add(submitBtn);
         card.add(Box.createVerticalStrut(15));
         card.add(backBtn);

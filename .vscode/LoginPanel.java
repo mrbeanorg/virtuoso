@@ -13,15 +13,26 @@ public class LoginPanel extends StyledBackgroundPanel {
     private JPasswordField passwordField;
 
     public LoginPanel(MainApp app) {
-        JPanel card = new JPanel();
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setOpaque(false);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(28, 33, 40, 220));
-        card.setBorder(new EmptyBorder(30, 35, 30, 35));
-        card.setPreferredSize(new Dimension(340, 530));
+        card.setBackground(new Color(28, 33, 40, 240));
+        card.setBorder(new EmptyBorder(40, 40, 40, 40));
+        card.setPreferredSize(new Dimension(360, 540));
 
         JLabel titleLabel = new JLabel("MEMBER LOGIN");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(220, 230, 240));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titleLabel.setForeground(new Color(240, 245, 250));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         usernameField = createPlaceholderTextField("Username");
@@ -44,19 +55,20 @@ public class LoginPanel extends StyledBackgroundPanel {
         JSeparator line = new JSeparator();
         line.setMaximumSize(new Dimension(280, 1));
         line.setForeground(new Color(60, 70, 85));
+        line.setBackground(new Color(60, 70, 85));
 
         card.add(titleLabel);
-        card.add(Box.createVerticalStrut(25));
+        card.add(Box.createVerticalStrut(35));
         card.add(usernameField);
         card.add(Box.createVerticalStrut(15));
         card.add(passwordField);
-        card.add(Box.createVerticalStrut(20));
+        card.add(Box.createVerticalStrut(25));
         card.add(loginBtn);
-        card.add(Box.createVerticalStrut(12));
+        card.add(Box.createVerticalStrut(15));
         card.add(forgotLabel);
-        card.add(Box.createVerticalStrut(18));
+        card.add(Box.createVerticalStrut(20));
         card.add(line);
-        card.add(Box.createVerticalStrut(18));
+        card.add(Box.createVerticalStrut(20));
         card.add(registerBtn);
         card.add(Box.createVerticalStrut(12));
         card.add(exitBtn);
@@ -117,7 +129,6 @@ public class LoginPanel extends StyledBackgroundPanel {
     }
 
     private boolean verifyPassword(String username, String password) {
-       
         String sql = "SELECT * FROM student_login WHERE username = ? AND password = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -133,13 +144,32 @@ public class LoginPanel extends StyledBackgroundPanel {
     }
 
     public static JTextField createPlaceholderTextField(String placeholder) {
-        JTextField tf = new JTextField(placeholder);
-        tf.setMaximumSize(new Dimension(280, 40));
+        JTextField tf = new JTextField(placeholder) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(hasFocus() ? new Color(46, 117, 89) : new Color(48, 55, 65));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        tf.setOpaque(false);
+        tf.setMaximumSize(new Dimension(280, 42));
         tf.setBackground(new Color(20, 25, 32));
         tf.setForeground(Color.LIGHT_GRAY);
         tf.setCaretColor(Color.WHITE);
-        tf.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tf.setBorder(BorderFactory.createEmptyBorder(5, 12, 5, 12));
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         tf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
@@ -147,26 +177,47 @@ public class LoginPanel extends StyledBackgroundPanel {
                     tf.setText("");
                     tf.setForeground(Color.WHITE);
                 }
+                tf.repaint();
             }
             public void focusLost(FocusEvent e) {
                 if (tf.getText().isEmpty()) {
                     tf.setText(placeholder);
                     tf.setForeground(Color.LIGHT_GRAY);
                 }
+                tf.repaint();
             }
         });
         return tf;
     }
 
     public static JPasswordField createPlaceholderPasswordField(String placeholder) {
-        JPasswordField pf = new JPasswordField(placeholder);
-        pf.setMaximumSize(new Dimension(280, 40));
+        JPasswordField pf = new JPasswordField(placeholder) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(hasFocus() ? new Color(46, 117, 89) : new Color(48, 55, 65));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        pf.setOpaque(false);
+        pf.setMaximumSize(new Dimension(280, 42));
         pf.setBackground(new Color(20, 25, 32));
         pf.setForeground(Color.LIGHT_GRAY);
         pf.setCaretColor(Color.WHITE);
         pf.setEchoChar((char) 0);
-        pf.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        pf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        pf.setBorder(BorderFactory.createEmptyBorder(5, 12, 5, 12));
+        pf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         pf.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent e) {
@@ -175,6 +226,7 @@ public class LoginPanel extends StyledBackgroundPanel {
                     pf.setEchoChar('•');
                     pf.setForeground(Color.WHITE);
                 }
+                pf.repaint();
             }
             public void focusLost(FocusEvent e) {
                 if (pf.getPassword().length == 0) {
@@ -182,20 +234,37 @@ public class LoginPanel extends StyledBackgroundPanel {
                     pf.setEchoChar((char) 0);
                     pf.setForeground(Color.LIGHT_GRAY);
                 }
+                pf.repaint();
             }
         });
         return pf;
     }
 
     public static JButton createButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text);
-        btn.setMaximumSize(new Dimension(280, 40));
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (getModel().isPressed()) {
+                    g2.setColor(bg.darker());
+                } else if (getModel().isRollover()) {
+                    g2.setColor(bg.brighter());
+                } else {
+                    g2.setColor(bg);
+                }
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        btn.setMaximumSize(new Dimension(280, 42));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setBackground(bg);
         btn.setForeground(fg);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
+        btn.setContentAreaFilled(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }

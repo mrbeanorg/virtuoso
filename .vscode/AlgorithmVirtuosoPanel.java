@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
@@ -14,19 +15,17 @@ import java.util.List;
 
 public class AlgorithmVirtuosoPanel extends JPanel {
 
-    private static final Color COLOR_MAIN_BG = new Color(20, 24, 29);          
-    private static final Color COLOR_PANEL_BG = new Color(28, 33, 40);         
-    private static final Color COLOR_CANVAS_BG = new Color(15, 18, 22);        
-    private static final Color COLOR_TEXT_HEADER = new Color(220, 230, 240);   
-    private static final Color COLOR_TEXT_MUTED = new Color(140, 160, 180);    
-    private static final Color COLOR_ACCENT_GREEN = new Color(46, 204, 113);  
-    private static final Color COLOR_ACCENT_TEXT = Color.WHITE;      
-    private static final Color COLOR_INPUT_BG = new Color(20, 25, 32);         
-    private static final Color COLOR_BORDER = new Color(48, 55, 65);           
+    private static final Color COLOR_MAIN_BG = new Color(20, 24, 29);
+    private static final Color COLOR_PANEL_BG = new Color(28, 33, 40, 240);
+    private static final Color COLOR_CANVAS_BG = new Color(15, 18, 22);
+    private static final Color COLOR_TEXT_HEADER = new Color(240, 245, 250);
+    private static final Color COLOR_TEXT_MUTED = new Color(150, 165, 180);
+    private static final Color COLOR_ACCENT_GREEN = new Color(46, 204, 113);
+    private static final Color COLOR_BORDER = new Color(48, 55, 65);
 
-    private String currentUser = "alan"; 
+    private String currentUser = "alan";
     private String selectedAlgorithm = "Bubble Sort";
-    private boolean isSelectionAscending = true; 
+    private boolean isSelectionAscending = true;
     private int[] numberArray = new int[]{};
 
     private static class PyramidStep {
@@ -60,13 +59,13 @@ public class AlgorithmVirtuosoPanel extends JPanel {
             this.currentUser = loggedInUser;
         }
 
-        setLayout(new BorderLayout(12, 12));
+        setLayout(new BorderLayout(20, 20));
         setBackground(COLOR_MAIN_BG);
-        setBorder(new EmptyBorder(12, 15, 15, 15));
+        setBorder(new EmptyBorder(25, 25, 25, 25));
 
         add(createHeaderPanel(onBackToMenu), BorderLayout.NORTH);
 
-        JPanel contentPanel = new JPanel(new BorderLayout(12, 12));
+        JPanel contentPanel = new JPanel(new BorderLayout(20, 20));
         contentPanel.setOpaque(false);
 
         contentPanel.add(createLeftSidebar(), BorderLayout.WEST);
@@ -79,23 +78,25 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private JPanel createHeaderPanel(Runnable onBackToMenu) {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        header.setPreferredSize(new Dimension(0, 42));
+        header.setPreferredSize(new Dimension(0, 45));
 
-        JLabel titleLabel = new JLabel("🕮 Algorithm Virtuoso Pyramid Workspace");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        JLabel titleLabel = new JLabel("Algorithm Virtuoso Workspace");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(COLOR_TEXT_HEADER);
 
-        JPanel rightControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel rightControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         rightControls.setOpaque(false);
 
-        JLabel userBadge = new JLabel("👤 " + currentUser);
+        JLabel userBadge = new JLabel("👤 " + currentUser.toUpperCase());
         userBadge.setForeground(COLOR_TEXT_HEADER);
-        userBadge.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        userBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JButton historyBtn = createStyledPillButton("📜 My Sort History", new Color(55, 65, 80), COLOR_ACCENT_TEXT);
+        JButton historyBtn = LoginPanel.createButton("📜 My Sort History", new Color(55, 75, 95), Color.WHITE);
+        historyBtn.setPreferredSize(new Dimension(150, 38));
         historyBtn.addActionListener(e -> showHistoryDialog());
 
-        JButton backBtn = createStyledPillButton("Dashboard", new Color(55, 65, 80), COLOR_ACCENT_TEXT);
+        JButton backBtn = LoginPanel.createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
+        backBtn.setPreferredSize(new Dimension(110, 38));
         backBtn.addActionListener(e -> {
             if (onBackToMenu != null) onBackToMenu.run();
         });
@@ -109,13 +110,30 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         return header;
     }
 
+    private JPanel createRoundedCard() {
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(COLOR_PANEL_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        panel.setOpaque(false);
+        return panel;
+    }
+
     private JPanel createLeftSidebar() {
-        JPanel sidebar = new JPanel(new BorderLayout(10, 10));
-        sidebar.setOpaque(false);
-        sidebar.setPreferredSize(new Dimension(190, 0));
+        JPanel sidebar = createRoundedCard();
+        sidebar.setLayout(new BorderLayout(10, 15));
+        sidebar.setBorder(new EmptyBorder(20, 20, 20, 20));
+        sidebar.setPreferredSize(new Dimension(220, 0));
 
         JLabel title = new JLabel("SELECT ALGORITHM");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
         title.setForeground(COLOR_TEXT_MUTED);
 
         algorithmListModel = new DefaultListModel<>();
@@ -128,8 +146,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         algorithmList.setOpaque(false);
         algorithmList.setBackground(new Color(0, 0, 0, 0));
         algorithmList.setForeground(COLOR_TEXT_HEADER);
-        algorithmList.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        algorithmList.setFixedCellHeight(42);
+        algorithmList.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        algorithmList.setFixedCellHeight(48);
 
         algorithmList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
@@ -143,21 +161,17 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                     protected void paintComponent(Graphics g) {
                         Graphics2D g2 = (Graphics2D) g.create();
                         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
                         if (isSelected) {
                             g2.setColor(new Color(46, 117, 89));
-                            g2.fill(new RoundRectangle2D.Float(0, 2, getWidth() - 1, getHeight() - 5, 10, 10));
                         } else {
-                            g2.setColor(COLOR_PANEL_BG);
-                            g2.fill(new RoundRectangle2D.Float(0, 2, getWidth() - 1, getHeight() - 5, 10, 10));
-                            g2.setColor(COLOR_BORDER);
-                            g2.draw(new RoundRectangle2D.Float(0, 2, getWidth() - 1, getHeight() - 5, 10, 10));
+                            g2.setColor(new Color(35, 42, 52));
                         }
+                        g2.fillRoundRect(0, 4, getWidth(), getHeight() - 8, 12, 12);
                         g2.dispose();
                     }
                 };
                 card.setOpaque(false);
-                label.setForeground(COLOR_TEXT_HEADER);
+                label.setForeground(Color.WHITE);
                 card.add(label, BorderLayout.CENTER);
                 return card;
             }
@@ -167,12 +181,7 @@ public class AlgorithmVirtuosoPanel extends JPanel {
             if (!e.getValueIsAdjusting()) {
                 selectedAlgorithm = algorithmList.getSelectedValue();
                 logMessage("Switched to: " + selectedAlgorithm);
-
-                if ("Selection Sort".equals(selectedAlgorithm)) {
-                    selectionToggleContainer.setVisible(true);
-                } else {
-                    selectionToggleContainer.setVisible(false);
-                }
+                selectionToggleContainer.setVisible("Selection Sort".equals(selectedAlgorithm));
             }
         });
 
@@ -184,48 +193,63 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private void styleRadioButton(JRadioButton radio) {
         radio.setOpaque(false);
         radio.setForeground(COLOR_TEXT_HEADER);
-        radio.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        radio.setFont(new Font("Segoe UI", Font.BOLD, 13));
         radio.setFocusPainted(false);
         radio.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
     private JPanel createCenterVisualizer() {
-        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
-        centerPanel.setOpaque(false);
+        JPanel centerPanel = createRoundedCard();
+        centerPanel.setLayout(new BorderLayout(15, 15));
+        centerPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setOpaque(false);
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         row1.setOpaque(false);
 
         JLabel inputLabel = new JLabel("Enter Numbers:");
-        inputLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        inputLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         inputLabel.setForeground(COLOR_TEXT_HEADER);
 
-        inputField = new JTextField("45, 12, 89, 23, 7, 67, 34", 26);
-        inputField.setBackground(COLOR_INPUT_BG);
-        inputField.setForeground(COLOR_TEXT_HEADER);
+        inputField = new JTextField("45, 12, 89, 23, 7, 67, 34", 26) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(20, 25, 32));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(hasFocus() ? new Color(46, 117, 89) : COLOR_BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        inputField.setOpaque(false);
+        inputField.setForeground(Color.WHITE);
         inputField.setCaretColor(Color.WHITE);
-        inputField.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        inputField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COLOR_BORDER, 1),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        inputField.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        inputField.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
 
         row1.add(inputLabel);
         row1.add(inputField);
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
         row2.setOpaque(false);
 
-        startSortBtn = createStyledPillButton("▷  Start Visual Sort", new Color(46, 117, 89), COLOR_ACCENT_TEXT);
-        startSortBtn.setPreferredSize(new Dimension(160, 32));
+        startSortBtn = LoginPanel.createButton("▷ Start Visual Sort", new Color(46, 117, 89), Color.WHITE);
+        startSortBtn.setPreferredSize(new Dimension(180, 40));
         startSortBtn.addActionListener(e -> prepareAndStartSort());
 
-        selectionToggleContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        selectionToggleContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         selectionToggleContainer.setOpaque(false);
         selectionToggleContainer.setVisible(false);
 
@@ -241,12 +265,12 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         ascendingRadio.addActionListener(e -> {
             isSelectionAscending = true;
-            logMessage("Selection Sort Order: ASCENDING (Smallest First)");
+            logMessage("Selection Sort Order: ASCENDING");
         });
 
         descendingRadio.addActionListener(e -> {
             isSelectionAscending = false;
-            logMessage("Selection Sort Order: DESCENDING (Largest First)");
+            logMessage("Selection Sort Order: DESCENDING");
         });
 
         selectionToggleContainer.add(ascendingRadio);
@@ -256,7 +280,7 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         row2.add(selectionToggleContainer);
 
         controlPanel.add(row1);
-        controlPanel.add(Box.createVerticalStrut(5));
+        controlPanel.add(Box.createVerticalStrut(10));
         controlPanel.add(row2);
 
         visualizerCanvas = new BubbleVisualizerPanel();
@@ -272,20 +296,21 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     }
 
     private JPanel createRightLogPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout(8, 8));
-        rightPanel.setOpaque(false);
-        rightPanel.setPreferredSize(new Dimension(230, 0));
+        JPanel rightPanel = createRoundedCard();
+        rightPanel.setLayout(new BorderLayout(10, 15));
+        rightPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        rightPanel.setPreferredSize(new Dimension(260, 0));
 
         JLabel title = new JLabel("EXECUTION LOG");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
         title.setForeground(COLOR_TEXT_MUTED);
 
         logTextArea = new JTextArea();
         logTextArea.setEditable(false);
         logTextArea.setBackground(COLOR_CANVAS_BG);
         logTextArea.setForeground(COLOR_ACCENT_GREEN);
-        logTextArea.setFont(new Font("Consolas", Font.PLAIN, 12));
-        logTextArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        logTextArea.setFont(new Font("Consolas", Font.PLAIN, 13));
+        logTextArea.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JScrollPane scrollPane = new JScrollPane(logTextArea);
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
@@ -294,27 +319,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         rightPanel.add(title, BorderLayout.NORTH);
         rightPanel.add(scrollPane, BorderLayout.CENTER);
         return rightPanel;
-    }
-
-    private JButton createStyledPillButton(String text, Color bg, Color fg) {
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(bg);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setForeground(fg);
-        btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
     }
 
     private void prepareAndStartSort() {
@@ -350,10 +354,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
     private void pushPyramidState(int act1, int act2) {
         sortingStepsHistory.add(new PyramidStep(numberArray, act1, act2));
-
         visualizerCanvas.updateCanvasDimensions();
         visualizerCanvas.repaint();
-
         SwingUtilities.invokeLater(() -> {
             JScrollBar vertical = canvasScrollPane.getVerticalScrollBar();
             vertical.setValue(vertical.getMaximum());
@@ -502,9 +504,10 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
     private void showHistoryDialog() {
         JDialog historyDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Sorting History - " + currentUser, true);
-        historyDialog.setSize(650, 450);
+        historyDialog.setSize(750, 500);
         historyDialog.setLocationRelativeTo(this);
         historyDialog.setLayout(new BorderLayout());
+        historyDialog.getContentPane().setBackground(COLOR_MAIN_BG);
 
         String[] columns = {"Algorithm", "Initial Array", "Sorted Array", "Date/Time"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
@@ -512,9 +515,24 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         table.setBackground(COLOR_PANEL_BG);
         table.setForeground(COLOR_TEXT_HEADER);
-        table.getTableHeader().setBackground(COLOR_CANVAS_BG);
-        table.getTableHeader().setForeground(COLOR_ACCENT_GREEN);
-        table.setRowHeight(25);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setRowHeight(36);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(46, 117, 89));
+        table.setSelectionForeground(Color.WHITE);
+
+        table.getTableHeader().setBackground(new Color(35, 42, 52));
+        table.getTableHeader().setForeground(COLOR_TEXT_HEADER);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBorder(BorderFactory.createEmptyBorder());
+        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+
+        DefaultTableCellRenderer paddedRenderer = new DefaultTableCellRenderer();
+        paddedRenderer.setBorder(new EmptyBorder(0, 10, 0, 10));
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(paddedRenderer);
+        }
 
         Runnable loadTableData = () -> {
             tableModel.setRowCount(0);
@@ -542,17 +560,13 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(COLOR_PANEL_BG);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.setBackground(COLOR_CANVAS_BG);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
+        bottomPanel.setBackground(COLOR_MAIN_BG);
 
-        JButton clearHistoryBtn = new JButton("🗑️ Delete All My History");
-        clearHistoryBtn.setBackground(new Color(180, 60, 60));
-        clearHistoryBtn.setForeground(Color.WHITE);
-        clearHistoryBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        clearHistoryBtn.setFocusPainted(false);
-        clearHistoryBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
+        JButton clearHistoryBtn = LoginPanel.createButton("🗑️ Delete All My History", new Color(180, 60, 60), Color.WHITE);
+        clearHistoryBtn.setPreferredSize(new Dimension(200, 38));
         clearHistoryBtn.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
                     historyDialog,
@@ -594,8 +608,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         public void updateCanvasDimensions() {
             int totalSteps = sortingStepsHistory.size();
-            int verticalGap = 65;
-            int requiredHeight = Math.max(420, (totalSteps + 1) * verticalGap + 40);
+            int verticalGap = 75; 
+            int requiredHeight = Math.max(420, (totalSteps + 1) * verticalGap + 50);
 
             setPreferredSize(new Dimension(600, requiredHeight));
             revalidate();
@@ -610,8 +624,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             int totalSteps = sortingStepsHistory.size();
-            int startY = 35;
-            int verticalGap = 65;
+            int startY = 40;
+            int verticalGap = 75;
 
             for (int rowIndex = 0; rowIndex < totalSteps; rowIndex++) {
                 PyramidStep tier = sortingStepsHistory.get(rowIndex);
@@ -619,8 +633,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
                 boolean isCurrentActiveRow = (rowIndex == totalSteps - 1);
 
-                int bubbleDiameter = isCurrentActiveRow ? 46 : 34;
-                int elementGap = isCurrentActiveRow ? 12 : 8;
+                int bubbleDiameter = isCurrentActiveRow ? 52 : 38;
+                int elementGap = isCurrentActiveRow ? 16 : 10;
 
                 int rowWidth = (arr.length * bubbleDiameter) + ((arr.length - 1) * elementGap);
                 int startX = (getWidth() - rowWidth) / 2;
@@ -630,21 +644,21 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                     int y = startY;
 
                     if (isCurrentActiveRow && (i == tier.act1 || i == tier.act2)) {
-                        g2d.setColor(new Color(230, 80, 90));
+                        g2d.setColor(new Color(231, 76, 60)); 
                     } else if (isCurrentActiveRow) {
-                        g2d.setColor(new Color(38, 90, 95));
+                        g2d.setColor(new Color(46, 117, 89)); 
                     } else {
-                        g2d.setColor(new Color(28, 55, 62, 160));
+                        g2d.setColor(new Color(35, 42, 52)); 
                     }
 
                     g2d.fillOval(x, y, bubbleDiameter, bubbleDiameter);
 
-                    g2d.setColor(isCurrentActiveRow ? COLOR_ACCENT_GREEN : COLOR_BORDER);
+                    g2d.setColor(isCurrentActiveRow ? Color.WHITE : COLOR_BORDER);
                     g2d.setStroke(new BasicStroke(isCurrentActiveRow ? 2 : 1));
                     g2d.drawOval(x, y, bubbleDiameter, bubbleDiameter);
 
                     String numText = String.valueOf(arr[i]);
-                    g2d.setFont(new Font("Segoe UI", Font.BOLD, isCurrentActiveRow ? 14 : 11));
+                    g2d.setFont(new Font("Segoe UI", Font.BOLD, isCurrentActiveRow ? 16 : 12));
                     g2d.setColor(isCurrentActiveRow ? Color.WHITE : COLOR_TEXT_MUTED);
 
                     FontMetrics fm = g2d.getFontMetrics();
