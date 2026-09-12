@@ -49,14 +49,24 @@ public class DatabaseApp {
                 "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                 ");";
 
+        // NEW: Table for Quiz Mode tracking
+        String createQuizTableSQL = "CREATE TABLE IF NOT EXISTS user_quiz_history (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "username VARCHAR(100) NOT NULL, " +
+                "actual_algorithm VARCHAR(100) NOT NULL, " +
+                "user_guess VARCHAR(100) NOT NULL, " +
+                "is_correct BOOLEAN NOT NULL, " +
+                "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ");";
+
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
              Statement stmt = conn.createStatement()) {
             
             stmt.execute(createVaultTableSQL);
             stmt.execute(createLoginTableSQL);
             stmt.execute(createHistoryTableSQL);
+            stmt.execute(createQuizTableSQL); // Execute new table creation
             
-            // Console confirmation for easier debugging
             System.out.println("✅ Database connection successful. Schema verified.");
 
         } catch (SQLException e) {

@@ -1,12 +1,13 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.RoundRectangle2D;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -67,6 +68,7 @@ public class PasswordVaultPanel extends JPanel {
         JPanel splitContainer = new JPanel(new GridLayout(1, 2, 25, 0));
         splitContainer.setOpaque(false);
 
+        // --- LEFT PANEL: GENERATOR ---
         JPanel leftPanel = createRoundedCard(cardBg);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
@@ -76,22 +78,24 @@ public class PasswordVaultPanel extends JPanel {
         leftTitle.setForeground(textColor);
         leftTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        appNameField = LoginPanel.createPlaceholderTextField("E.g. Google, GitHub");
-        accountUsernameField = LoginPanel.createPlaceholderTextField("E.g. alan.wilson@gmail.com");
+        appNameField = createCustomTextField("E.g. Google, GitHub");
+        accountUsernameField = createCustomTextField("E.g. alan.wilson@gmail.com");
 
         useUpperCB = createStyledCheckBox("Uppercase (A-Z)", true);
         useDigitsCB = createStyledCheckBox("Digits (0-9)", true);
         useSymbolsCB = createStyledCheckBox("Symbols (!@#$)", true);
 
-        ChangeListener optionChangeListener = (ChangeEvent e) -> generatePassword();
-        useUpperCB.addChangeListener(optionChangeListener);
-        useDigitsCB.addChangeListener(optionChangeListener);
-        useSymbolsCB.addChangeListener(optionChangeListener);
+        // FIX: Use ItemListener instead of ChangeListener to prevent hover/rollover generation bugs
+        ItemListener optionListener = e -> generatePassword();
+        useUpperCB.addItemListener(optionListener);
+        useDigitsCB.addItemListener(optionListener);
+        useSymbolsCB.addItemListener(optionListener);
 
         lengthSpinner = new JSpinner(new SpinnerNumberModel(14, 6, 64, 1));
-        lengthSpinner.setMaximumSize(new Dimension(80, 32));
+        lengthSpinner.setMaximumSize(new Dimension(80, 36));
         lengthSpinner.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lengthSpinner.setBorder(BorderFactory.createEmptyBorder());
+        lengthSpinner.addChangeListener(e -> generatePassword());
 
         JPanel lengthRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         lengthRow.setOpaque(false);
@@ -114,7 +118,7 @@ public class PasswordVaultPanel extends JPanel {
         JButton generateBtn = LoginPanel.createButton("⚡ Generate Password", new Color(39, 138, 90), Color.WHITE);
         generateBtn.addActionListener(e -> generatePassword());
 
-        generatedPasswordDisplay = new JLabel("R(C$8EJsRX;EBK", SwingConstants.CENTER);
+        generatedPasswordDisplay = new JLabel("", SwingConstants.CENTER);
         generatedPasswordDisplay.setFont(new Font("Consolas", Font.BOLD, 18));
         generatedPasswordDisplay.setForeground(new Color(240, 245, 250));
         generatedPasswordDisplay.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -136,7 +140,9 @@ public class PasswordVaultPanel extends JPanel {
         leftPanel.add(createLabel("Password Options:"));
         leftPanel.add(Box.createVerticalStrut(8));
         leftPanel.add(useUpperCB);
+        leftPanel.add(Box.createVerticalStrut(5));
         leftPanel.add(useDigitsCB);
+        leftPanel.add(Box.createVerticalStrut(5));
         leftPanel.add(useSymbolsCB);
         leftPanel.add(Box.createVerticalStrut(15));
         leftPanel.add(lengthRow);
@@ -151,6 +157,7 @@ public class PasswordVaultPanel extends JPanel {
         leftPanel.add(Box.createVerticalStrut(15));
         leftPanel.add(saveBtn);
 
+        // --- RIGHT PANEL: VAULT TABLE ---
         JPanel rightPanel = createRoundedCard(cardBg);
         rightPanel.setLayout(new BorderLayout(0, 15));
         rightPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
@@ -163,7 +170,7 @@ public class PasswordVaultPanel extends JPanel {
         vaultTableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4;
+                return column == 4; // Only action button is editable
             }
         };
 
@@ -171,17 +178,23 @@ public class PasswordVaultPanel extends JPanel {
         vaultTable.setBackground(new Color(20, 25, 32));
         vaultTable.setForeground(textColor);
         vaultTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        vaultTable.setRowHeight(40); 
+        vaultTable.setRowHeight(44); 
         vaultTable.setShowGrid(false); 
         vaultTable.setIntercellSpacing(new Dimension(0, 0));
         vaultTable.setSelectionBackground(new Color(46, 117, 89));
         vaultTable.setSelectionForeground(Color.WHITE);
 
-        vaultTable.getTableHeader().setBackground(new Color(35, 42, 52));
-        vaultTable.getTableHeader().setForeground(textColor);
-        vaultTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        vaultTable.getTableHeader().setBorder(BorderFactory.createEmptyBorder());
-        vaultTable.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        // FIX: Override Table Header rendering to perfectly match the dark theme
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setBackground(new Color(35, 42, 52));
+        headerRenderer.setForeground(new Color(150, 165, 180));
+        headerRenderer.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        headerRenderer.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        
+        vaultTable.getTableHeader().setDefaultRenderer(headerRenderer);
+        vaultTable.getTableHeader().setBackground(new Color(35, 42, 52)); // Fallback
+        vaultTable.getTableHeader().setOpaque(true);
+        vaultTable.getTableHeader().setPreferredSize(new Dimension(0, 42));
 
         vaultTable.getColumnModel().getColumn(0).setMinWidth(0);
         vaultTable.getColumnModel().getColumn(0).setMaxWidth(0);
@@ -199,7 +212,7 @@ public class PasswordVaultPanel extends JPanel {
                 if (revealedRows.contains(row)) {
                     l.setText(value != null ? value.toString() : "");
                 } else {
-                    l.setText("••••••••••");
+                    l.setText("••••••••••••");
                 }
                 l.setFont(new Font("Consolas", Font.PLAIN, 14));
                 l.setBorder(new EmptyBorder(0, 10, 0, 10));
@@ -213,9 +226,10 @@ public class PasswordVaultPanel extends JPanel {
 
         JScrollPane tableScroll = new JScrollPane(vaultTable);
         tableScroll.getViewport().setBackground(new Color(20, 25, 32));
-        tableScroll.setBorder(BorderFactory.createEmptyBorder()); 
+        tableScroll.setBackground(new Color(20, 25, 32));
+        tableScroll.setBorder(BorderFactory.createLineBorder(new Color(48, 55, 65), 1)); 
 
-        JButton copyBtn = LoginPanel.createButton("📋 Copy Selected Password", new Color(55, 75, 95), Color.WHITE);
+        JButton copyBtn = LoginPanel.createButton("📋 Copy Selected", new Color(55, 75, 95), Color.WHITE);
         copyBtn.addActionListener(e -> copySelectedPassword());
 
         JButton deleteSelectedBtn = LoginPanel.createButton("🗑️ Delete Selected", new Color(185, 80, 80), Color.WHITE);
@@ -267,14 +281,97 @@ public class PasswordVaultPanel extends JPanel {
         return label;
     }
 
+    // FIX: Custom text field rendering to ensure perfect theme matching
+    private JTextField createCustomTextField(String placeholder) {
+        JTextField tf = new JTextField(placeholder) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(20, 25, 32));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(hasFocus() ? new Color(46, 117, 89) : new Color(48, 55, 65));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+            }
+        };
+        tf.setOpaque(false);
+        tf.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        tf.setPreferredSize(new Dimension(280, 44));
+        tf.setForeground(Color.LIGHT_GRAY);
+        tf.setCaretColor(Color.WHITE);
+        tf.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        tf.addFocusListener(new FocusAdapter() {
+            public void focusGained(FocusEvent e) {
+                if (tf.getText().equals(placeholder)) {
+                    tf.setText("");
+                    tf.setForeground(Color.WHITE);
+                }
+                tf.repaint();
+            }
+            public void focusLost(FocusEvent e) {
+                if (tf.getText().isEmpty()) {
+                    tf.setText(placeholder);
+                    tf.setForeground(Color.LIGHT_GRAY);
+                }
+                tf.repaint();
+            }
+        });
+        return tf;
+    }
+
+    // FIX: Applied custom vector icon to override default white/blue Swing checkboxes
     private JCheckBox createStyledCheckBox(String text, boolean selected) {
         JCheckBox cb = new JCheckBox(text, selected);
         cb.setOpaque(false);
         cb.setForeground(new Color(200, 215, 230));
-        cb.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cb.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cb.setFocusPainted(false);
         cb.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cb.setIcon(new DarkThemeCheckBoxIcon(false));
+        cb.setSelectedIcon(new DarkThemeCheckBoxIcon(true));
         return cb;
+    }
+
+    // Custom Icon Class for CheckBoxes
+    private static class DarkThemeCheckBoxIcon implements Icon {
+        private final boolean selected;
+        public DarkThemeCheckBoxIcon(boolean selected) {
+            this.selected = selected;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            if (selected) {
+                g2.setColor(new Color(46, 117, 89));
+                g2.fillRoundRect(x, y, 18, 18, 6, 6);
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.drawLine(x + 5, y + 9, x + 8, y + 12);
+                g2.drawLine(x + 8, y + 12, x + 13, y + 5);
+            } else {
+                g2.setColor(new Color(48, 55, 65));
+                g2.fillRoundRect(x, y, 18, 18, 6, 6);
+                g2.setColor(new Color(20, 25, 32));
+                g2.fillRoundRect(x + 2, y + 2, 14, 14, 4, 4);
+            }
+            g2.dispose();
+        }
+
+        @Override public int getIconWidth() { return 18; }
+        @Override public int getIconHeight() { return 18; }
     }
 
     private void generatePassword() {
