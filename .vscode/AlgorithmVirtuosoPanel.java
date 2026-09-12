@@ -4,7 +4,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.geom.Path2D;
-import java.awt.geom.RoundRectangle2D;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -116,6 +115,10 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         historyBtn.setPreferredSize(new Dimension(130, 38));
         historyBtn.addActionListener(e -> showHistoryDialog());
 
+        JButton theoryBtn = LoginPanel.createButton("📘 Theory", new Color(55, 75, 95), Color.WHITE);
+        theoryBtn.setPreferredSize(new Dimension(110, 38));
+        theoryBtn.addActionListener(e -> showTheoryDialog());
+
         JButton backBtn = LoginPanel.createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
         backBtn.setPreferredSize(new Dimension(110, 38));
         backBtn.addActionListener(e -> {
@@ -124,6 +127,7 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         rightControls.add(userBadge);
         rightControls.add(historyBtn);
+        rightControls.add(theoryBtn);
         rightControls.add(backBtn);
 
         header.add(titleLabel, BorderLayout.WEST);
@@ -475,6 +479,10 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     }
 
     private void prepareAndStartSort() {
+        if (isRunning) {
+            return;
+        }
+
         String rawInput = inputField.getText().trim();
 
         if (rawInput.isEmpty()) {
@@ -915,19 +923,30 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private void bucketSortVisual() {
         int n = numberArray.length;
         if (n <= 0) return;
-        List<Integer>[] buckets = new ArrayList[n];
-        for (int i = 0; i < n; i++) buckets[i] = new ArrayList<>();
+
+        List<List<Integer>> buckets = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            buckets.add(new ArrayList<>());
+        }
+
         int max = numberArray[0];
-        for (int num : numberArray) if (num > max) max = num;
-        max++; 
+        for (int num : numberArray) {
+            if (num > max) max = num;
+        }
+        max++;
+
         for (int num : numberArray) {
             int bi = (n * num) / max;
-            buckets[bi].add(num);
+            if (bi >= buckets.size()) {
+                bi = buckets.size() - 1;
+            }
+            buckets.get(bi).add(num);
         }
+
         int idx = 0;
-        for (int i = 0; i < n; i++) {
-            java.util.Collections.sort(buckets[i]);
-            for (int num : buckets[i]) {
+        for (List<Integer> bucket : buckets) {
+            java.util.Collections.sort(bucket);
+            for (int num : bucket) {
                 checkPauseState();
                 numberArray[idx++] = num;
                 pushPyramidState(idx - 1, idx - 1, "Bucket: Scatter & gather");
