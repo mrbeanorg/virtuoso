@@ -10,9 +10,9 @@ public class MainApp extends JFrame {
     private RegisterPanel registerPanel;
     private DashboardPanel dashboardPanel;
     private AlgorithmVirtuosoPanel virtuosoPanel;
-    
-    // We replaced vaultPanel with your new ExamPrepPanel
     private ExamPrepPanel examPrepPanel;
+    private SortHistoryPanel sortHistoryPanel;
+    private QuizHistoryPanel quizHistoryPanel;
 
     private String loggedInUser = "alan";
 
@@ -59,16 +59,26 @@ public class MainApp extends JFrame {
             if (virtuosoPanel != null) {
                 mainContainer.remove(virtuosoPanel);
             }
-            virtuosoPanel = new AlgorithmVirtuosoPanel(loggedInUser, () -> showView("DASHBOARD"));
+            virtuosoPanel = new AlgorithmVirtuosoPanel(this, loggedInUser, () -> showView("DASHBOARD"));
             mainContainer.add(virtuosoPanel, "VIRTUOSO");
-            
-        // Load the new ExamPrepPanel instead of the old Vault
         } else if (cardName.equals("EXAM_PREP")) {
             if (examPrepPanel != null) {
                 mainContainer.remove(examPrepPanel);
             }
             examPrepPanel = new ExamPrepPanel(loggedInUser, () -> showView("DASHBOARD"));
             mainContainer.add(examPrepPanel, "EXAM_PREP");
+        } else if (cardName.equals("SORT_HISTORY")) {
+            if (sortHistoryPanel != null) {
+                mainContainer.remove(sortHistoryPanel);
+            }
+            sortHistoryPanel = new SortHistoryPanel(loggedInUser, () -> showView("VIRTUOSO"));
+            mainContainer.add(sortHistoryPanel, "SORT_HISTORY");
+        } else if (cardName.equals("QUIZ_HISTORY")) {
+            if (quizHistoryPanel != null) {
+                mainContainer.remove(quizHistoryPanel);
+            }
+            quizHistoryPanel = new QuizHistoryPanel(loggedInUser, () -> showView("VIRTUOSO"));
+            mainContainer.add(quizHistoryPanel, "QUIZ_HISTORY");
         }
         cardLayout.show(mainContainer, cardName);
     }

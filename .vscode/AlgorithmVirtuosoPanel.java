@@ -1,13 +1,10 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.geom.Path2D;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +21,7 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private static final Color COLOR_ACCENT_GREEN = new Color(46, 204, 113);
     private static final Color COLOR_BORDER = new Color(48, 55, 65);
 
+    private MainApp mainApp;
     private String currentUser = "alan";
     private String selectedAlgorithm = "Bubble Sort";
     private boolean isSelectionAscending = true;
@@ -32,7 +30,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private boolean isQuizModeActive = false;
     private String secretQuizAlgorithm = "";
 
-    // MP3 Playback Control States
     private volatile boolean isPaused = false;
     private volatile boolean isRunning = false;
     private int currentStepPointer = 0;
@@ -74,7 +71,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private JRadioButton ascendingRadio;
     private JRadioButton descendingRadio;
 
-    public AlgorithmVirtuosoPanel(String loggedInUser, Runnable onBackToMenu) {
+    public AlgorithmVirtuosoPanel(MainApp app, String loggedInUser, Runnable onBackToMenu) {
+        this.mainApp = app;
         if (loggedInUser != null && !loggedInUser.trim().isEmpty()) {
             this.currentUser = loggedInUser;
         }
@@ -111,9 +109,13 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         userBadge.setForeground(COLOR_TEXT_HEADER);
         userBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JButton historyBtn = LoginPanel.createButton("📜 My History", new Color(55, 75, 95), Color.WHITE);
-        historyBtn.setPreferredSize(new Dimension(130, 38));
-        historyBtn.addActionListener(e -> showHistoryDialog());
+        JButton sortHistoryBtn = LoginPanel.createButton("📜 Sorts", new Color(55, 75, 95), Color.WHITE);
+        sortHistoryBtn.setPreferredSize(new Dimension(100, 38));
+        sortHistoryBtn.addActionListener(e -> mainApp.showView("SORT_HISTORY"));
+
+        JButton quizHistoryBtn = LoginPanel.createButton("🎮 Quizzes", new Color(142, 68, 173), Color.WHITE);
+        quizHistoryBtn.setPreferredSize(new Dimension(115, 38));
+        quizHistoryBtn.addActionListener(e -> mainApp.showView("QUIZ_HISTORY"));
 
         JButton theoryBtn = LoginPanel.createButton("📘 Theory", new Color(55, 75, 95), Color.WHITE);
         theoryBtn.setPreferredSize(new Dimension(110, 38));
@@ -126,7 +128,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         });
 
         rightControls.add(userBadge);
-        rightControls.add(historyBtn);
+        rightControls.add(sortHistoryBtn);
+        rightControls.add(quizHistoryBtn);
         rightControls.add(theoryBtn);
         rightControls.add(backBtn);
 
@@ -251,49 +254,31 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         String theoryHtml = "";
         switch (algo) {
             case "Bubble Sort":
-                theoryHtml = "<b>Bubble Sort (Elementary)</b><br>" +
-                             "• <i>Theory:</i> Compares adjacent items and swaps them if disordered.<br>" +
-                             "• <i>Animation:</i> Amber hotspot curves show items 'bubbling' to the top.";
+                theoryHtml = "<b>Bubble Sort (Elementary)</b><br>• <i>Theory:</i> Compares adjacent items and swaps them if disordered.";
                 break;
             case "Selection Sort":
-                theoryHtml = "<b>Selection Sort (Elementary)</b><br>" +
-                             "• <i>Theory:</i> Scans for the absolute minimum/maximum and locks it.<br>" +
-                             "• <i>Animation:</i> Blue scanning lines track boundary selections.";
+                theoryHtml = "<b>Selection Sort (Elementary)</b><br>• <i>Theory:</i> Scans for the absolute minimum/maximum and locks it.";
                 break;
             case "Insertion Sort":
-                theoryHtml = "<b>Insertion Sort (Elementary)</b><br>" +
-                             "• <i>Theory:</i> Builds sorted array like arranging cards in hand.<br>" +
-                             "• <i>Animation:</i> Purple shift paths trace elements slotting left.";
+                theoryHtml = "<b>Insertion Sort (Elementary)</b><br>• <i>Theory:</i> Builds sorted array like arranging cards in hand.";
                 break;
             case "Merge Sort":
-                theoryHtml = "<b>Merge Sort (Divide & Conquer)</b><br>" +
-                             "• <i>Theory:</i> Recursively splits halves and merges back stably.<br>" +
-                             "• <i>Animation:</i> Tree branches converge systematically.";
+                theoryHtml = "<b>Merge Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Recursively splits halves and merges back stably.";
                 break;
             case "Quick Sort":
-                theoryHtml = "<b>Quick Sort (Divide & Conquer)</b><br>" +
-                             "• <i>Theory:</i> Partitions data around a chosen pivot.<br>" +
-                             "• <i>Animation:</i> Red cross-over paths separate partitions.";
+                theoryHtml = "<b>Quick Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Partitions data around a chosen pivot.";
                 break;
             case "Heap Sort":
-                theoryHtml = "<b>Heap Sort (Divide & Conquer)</b><br>" +
-                             "• <i>Theory:</i> Uses binary heap to extract max elements.<br>" +
-                             "• <i>Animation:</i> Extracts root nodes iteratively.";
+                theoryHtml = "<b>Heap Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Uses binary heap to extract max elements.";
                 break;
             case "Counting Sort":
-                theoryHtml = "<b>Counting Sort (Non-Comparison)</b><br>" +
-                             "• <i>Theory:</i> Tallies key frequencies into buckets.<br>" +
-                             "• <i>Animation:</i> Direct frequency mapping sequence.";
+                theoryHtml = "<b>Counting Sort (Non-Comparison)</b><br>• <i>Theory:</i> Tallies key frequencies into buckets.";
                 break;
             case "Radix Sort":
-                theoryHtml = "<b>Radix Sort (Non-Comparison)</b><br>" +
-                             "• <i>Theory:</i> Sorts individual integer digits sequentially.<br>" +
-                             "• <i>Animation:</i> Multi-pass digit distribution.";
+                theoryHtml = "<b>Radix Sort (Non-Comparison)</b><br>• <i>Theory:</i> Sorts individual integer digits sequentially.";
                 break;
             case "Bucket Sort":
-                theoryHtml = "<b>Bucket Sort (Non-Comparison)</b><br>" +
-                             "• <i>Theory:</i> Scatters items across partitioned intervals.<br>" +
-                             "• <i>Animation:</i> Interval bucket distribution.";
+                theoryHtml = "<b>Bucket Sort (Non-Comparison)</b><br>• <i>Theory:</i> Scatters items across partitioned intervals.";
                 break;
         }
         theoryGuidePane.setText("<html><body style='color:#d0d5da; font-family:Segoe UI; font-size:11px;'>" + theoryHtml + "</body></html>");
@@ -479,12 +464,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     }
 
     private void prepareAndStartSort() {
-        if (isRunning) {
-            return;
-        }
-
+        if (isRunning) return;
         String rawInput = inputField.getText().trim();
-
         if (rawInput.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter numbers to sort.", "Input Empty", JOptionPane.WARNING_MESSAGE);
             return;
@@ -493,7 +474,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         try {
             String[] tokens = rawInput.split("[,\\s]+");
             numberArray = new int[tokens.length];
-
             for (int i = 0; i < tokens.length; i++) {
                 numberArray[i] = Integer.parseInt(tokens[i].trim());
             }
@@ -517,7 +497,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
             sortThread = new Thread(this::runVisualSort);
             sortThread.start();
-
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Invalid input! Enter integers separated by commas.", "Input Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -564,7 +543,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
     private void startQuizMode() {
         isQuizModeActive = true;
-        
         Random rand = new Random();
         int size = (int) sizeSpinner.getValue();
         numberArray = new int[size];
@@ -621,34 +599,18 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         int[] originalArray = numberArray.clone();
 
         switch (selectedAlgorithm) {
-            case "Bubble Sort":
-                bubbleSortVisual();
-                break;
+            case "Bubble Sort": bubbleSortVisual(); break;
             case "Selection Sort":
                 if (isSelectionAscending) selectionSortAscendingVisual();
                 else selectionSortDescendingVisual();
                 break;
-            case "Insertion Sort":
-                insertionSortVisual();
-                break;
-            case "Merge Sort":
-                mergeSortVisual(0, numberArray.length - 1);
-                break;
-            case "Quick Sort":
-                quickSortVisual(0, numberArray.length - 1);
-                break;
-            case "Heap Sort":
-                heapSortVisual();
-                break;
-            case "Counting Sort":
-                countingSortVisual();
-                break;
-            case "Radix Sort":
-                radixSortVisual();
-                break;
-            case "Bucket Sort":
-                bucketSortVisual();
-                break;
+            case "Insertion Sort": insertionSortVisual(); break;
+            case "Merge Sort": mergeSortVisual(0, numberArray.length - 1); break;
+            case "Quick Sort": quickSortVisual(0, numberArray.length - 1); break;
+            case "Heap Sort": heapSortVisual(); break;
+            case "Counting Sort": countingSortVisual(); break;
+            case "Radix Sort": radixSortVisual(); break;
+            case "Bucket Sort": bucketSortVisual(); break;
         }
 
         pushPyramidState(-1, -1, "Complete");
@@ -693,14 +655,12 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                 checkPauseState();
                 pushPyramidState(j, j + 1, "Bubble: Compare adjacent");
                 sleep(600);
-
                 if (numberArray[j] > numberArray[j + 1]) {
                     checkPauseState();
                     if(!isQuizModeActive) logMessage("Bubble Swap: " + numberArray[j] + " ↔ " + numberArray[j + 1]);
                     int temp = numberArray[j];
                     numberArray[j] = numberArray[j + 1];
                     numberArray[j + 1] = temp;
-
                     pushPyramidState(j, j + 1, "Bubble: Swap elements");
                     sleep(600);
                 }
@@ -716,17 +676,13 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                 checkPauseState();
                 pushPyramidState(minIdx, j, "Selection: Scan for minimum");
                 sleep(500);
-
-                if (numberArray[j] < numberArray[minIdx]) {
-                    minIdx = j;
-                }
+                if (numberArray[j] < numberArray[minIdx]) minIdx = j;
             }
             checkPauseState();
             if(!isQuizModeActive) logMessage("Selection Min Swap: " + numberArray[minIdx] + " ↔ " + numberArray[i]);
             int temp = numberArray[minIdx];
             numberArray[minIdx] = numberArray[i];
             numberArray[i] = temp;
-
             pushPyramidState(i, minIdx, "Selection: Lock minimum");
             sleep(600);
         }
@@ -740,17 +696,13 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                 checkPauseState();
                 pushPyramidState(maxIdx, j, "Selection: Scan for maximum");
                 sleep(500);
-
-                if (numberArray[j] > numberArray[maxIdx]) {
-                    maxIdx = j;
-                }
+                if (numberArray[j] > numberArray[maxIdx]) maxIdx = j;
             }
             checkPauseState();
             if(!isQuizModeActive) logMessage("Selection Max Swap: " + numberArray[maxIdx] + " ↔ " + numberArray[i]);
             int temp = numberArray[maxIdx];
             numberArray[maxIdx] = numberArray[i];
             numberArray[i] = temp;
-
             pushPyramidState(i, maxIdx, "Selection: Lock maximum");
             sleep(600);
         }
@@ -766,7 +718,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
                 int temp = numberArray[j];
                 numberArray[j] = numberArray[j - 1];
                 numberArray[j - 1] = temp;
-                
                 pushPyramidState(j - 1, j, "Insertion: Shift card left");
                 sleep(600);
                 j--;
@@ -792,11 +743,8 @@ public class AlgorithmVirtuosoPanel extends JPanel {
             checkPauseState();
             pushPyramidState(i, j, "Merge: Compare sublists");
             sleep(500);
-            if (numberArray[i] <= numberArray[j]) {
-                temp[k++] = numberArray[i++];
-            } else {
-                temp[k++] = numberArray[j++];
-            }
+            if (numberArray[i] <= numberArray[j]) temp[k++] = numberArray[i++];
+            else temp[k++] = numberArray[j++];
         }
         while (i <= mid) temp[k++] = numberArray[i++];
         while (j <= right) temp[k++] = numberArray[j++];
@@ -925,21 +873,15 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         if (n <= 0) return;
 
         List<List<Integer>> buckets = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            buckets.add(new ArrayList<>());
-        }
+        for (int i = 0; i < n; i++) buckets.add(new ArrayList<>());
 
         int max = numberArray[0];
-        for (int num : numberArray) {
-            if (num > max) max = num;
-        }
+        for (int num : numberArray) if (num > max) max = num;
         max++;
 
         for (int num : numberArray) {
             int bi = (n * num) / max;
-            if (bi >= buckets.size()) {
-                bi = buckets.size() - 1;
-            }
+            if (bi >= buckets.size()) bi = buckets.size() - 1;
             buckets.get(bi).add(num);
         }
 
@@ -1086,15 +1028,10 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         String messageHtml;
         if (isCorrect) {
-            messageHtml = "<html><div style='text-align:center; color:#f0f5fa; font-family:Segoe UI; width:300px;'>" +
-                          "You successfully identified <b>" + actual + "</b>!<br><br>" +
-                          "Your logical breakdown and pattern recognition are spot on. Keep mastering those algorithms!</div></html>";
+            messageHtml = "<html><div style='text-align:center; color:#f0f5fa; font-family:Segoe UI; width:300px;'>You successfully identified <b>" + actual + "</b>!<br><br>Your logical breakdown and pattern recognition are spot on. Keep mastering those algorithms!</div></html>";
             logTextArea.append("\n✅ Quiz Passed! Guessed: " + guess + "\n");
         } else {
-            messageHtml = "<html><div style='text-align:center; color:#f0f5fa; font-family:Segoe UI; width:300px;'>" +
-                          "You guessed: <b>" + guess + "</b><br>" +
-                          "Actual algorithm: <b>" + actual + "</b><br><br>" +
-                          "<i>Don't worry! Every mistake is a stepping stone to mastery. Review the animation steps and try again!</i></div></html>";
+            messageHtml = "<html><div style='text-align:center; color:#f0f5fa; font-family:Segoe UI; width:300px;'>You guessed: <b>" + guess + "</b><br>Actual algorithm: <b>" + actual + "</b><br><br><i>Don't worry! Every mistake is a stepping stone to mastery. Review the animation steps and try again!</i></div></html>";
             logTextArea.append("\n❌ Quiz Failed. Guessed: " + guess + " | Actual: " + actual + "\n");
         }
 
@@ -1119,21 +1056,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         resultDialog.setVisible(true);
     }
 
-    private void sleep(int baseMs) {
-        try {
-            int currentSpeed = speedSlider.getValue(); 
-            int actualSleep = (int) (baseMs * (currentSpeed / 600.0));
-            Thread.sleep(actualSleep);
-        } catch (InterruptedException ignored) {}
-    }
-
-    private void logMessage(String msg) {
-        SwingUtilities.invokeLater(() -> {
-            logTextArea.append(msg + "\n");
-            logTextArea.setCaretPosition(logTextArea.getDocument().getLength());
-        });
-    }
-
     private void showTheoryDialog() {
         JDialog theoryDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Algorithm Theory & Tutor Reference", true);
         theoryDialog.setSize(750, 600);
@@ -1144,28 +1066,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         String html = "<html><body style='color:#f0f5fa; font-family:Segoe UI; padding:15px; font-size:12px;'>" +
             "<h2 style='color:#2ecc71;'>Sorting Algorithm Categories</h2>" +
             "<p>Sorting algorithms organize data into a specific order by systematically comparing and swapping elements.</p>" +
-            "<h3 style='color:#3498db;'>1. Elementary Sorts (Bubble, Selection, Insertion)</h3>" +
-            "<p><b>Bubble Sort:</b> Repeatedly swaps adjacent elements if they are in the wrong order ($O(n^2)$ worst case).</p>" +
-            "<p><b>Selection Sort:</b> Finds the absolute minimum element and places it at the boundary ($O(n^2)$ guaranteed swaps).</p>" +
-            "<p><b>Insertion Sort:</b> Builds the sorted array incrementally like sorting playing cards ($O(n)$ best case).</p>" +
-            "<h3 style='color:#3498db;'>2. Efficient Divide-and-Conquer Sorts (Merge, Quick, Heap)</h3>" +
-            "<p><b>Merge Sort:</b> Recursively splits arrays and merges sorted sub-arrays ($O(n \\log n)$ time, stable).</p>" +
-            "<p><b>Quick Sort:</b> Partitions arrays around a selected pivot element ($O(n \\log n)$ average time).</p>" +
-            "<p><b>Heap Sort:</b> Utilizes a binary heap data structure to extract maximum elements in-place ($O(n \\log n)$).</p>" +
-            "<h3 style='color:#3498db;'>3. Specialized Non-Comparison Sorts (Counting, Radix, Bucket)</h3>" +
-            "<p><b>Counting Sort:</b> Tallies element frequencies within a bounded integer range ($O(n + k)$).</p>" +
-            "<p><b>Radix Sort:</b> Sorts data digit by digit using stable sub-sorting passes.</p>" +
-            "<p><b>Bucket Sort:</b> Distributes elements into uniform buckets before sorting individually.</p>" +
-            "<br><table border='1' cellspacing='0' cellpadding='6' style='border-collapse:collapse; width:100%; border-color:#303741;'>" +
-            "<tr style='background-color:#1c2128;'><th align='left'>Algorithm</th><th align='left'>Best Case</th><th align='left'>Worst Case</th><th align='left'>Space</th><th align='left'>Stable?</th></tr>" +
-            "<tr><td>Bubble Sort</td><td>$O(n)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td>Yes</td></tr>" +
-            "<tr><td>Selection Sort</td><td>$O(n^2)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td>No</td></tr>" +
-            "<tr><td>Insertion Sort</td><td>$O(n)$</td><td>$O(n^2)$</td><td>$O(1)$</td><td>Yes</td></tr>" +
-            "<tr><td>Merge Sort</td><td>$O(n \\log n)$</td><td>$O(n \\log n)$</td><td>$O(n)$</td><td>Yes</td></tr>" +
-            "<tr><td>Quick Sort</td><td>$O(n \\log n)$</td><td>$O(n^2)$</td><td>$O(\\log n)$</td><td>No</td></tr>" +
-            "<tr><td>Heap Sort</td><td>$O(n \\log n)$</td><td>$O(n \\log n)$</td><td>$O(1)$</td><td>No</td></tr>" +
-            "<tr><td>Counting Sort</td><td>$O(n + k)$</td><td>$O(n + k)$</td><td>$O(k)$</td><td>Yes</td></tr>" +
-            "</table>" +
             "</body></html>";
 
         JLabel content = new JLabel(html);
@@ -1191,18 +1091,12 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         String sql = "INSERT INTO user_sort_history (username, algorithm_name, input_array, sorted_array) VALUES (?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, user);
             pstmt.setString(2, algo);
             pstmt.setString(3, inputStr);
             pstmt.setString(4, sortedStr);
-
-            int rows = pstmt.executeUpdate();
-            if (rows > 0) {
-                logMessage("💾 Saved to DB for user: " + user);
-            }
+            pstmt.executeUpdate();
         } catch (SQLException e) {
-            logMessage("❌ Error saving to DB!");
             e.printStackTrace();
         }
     }
@@ -1211,7 +1105,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         String sql = "INSERT INTO user_quiz_history (username, actual_algorithm, user_guess, is_correct) VALUES (?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setString(1, user);
             pstmt.setString(2, actual);
             pstmt.setString(3, guess);
@@ -1222,103 +1115,19 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         }
     }
 
-    private void showHistoryDialog() {
-        JDialog historyDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Sorting History - " + currentUser, true);
-        historyDialog.setSize(750, 500);
-        historyDialog.setLocationRelativeTo(this);
-        historyDialog.setLayout(new BorderLayout());
-        historyDialog.getContentPane().setBackground(COLOR_MAIN_BG);
+    private void sleep(int baseMs) {
+        try {
+            int currentSpeed = speedSlider.getValue(); 
+            int actualSleep = (int) (baseMs * (currentSpeed / 600.0));
+            Thread.sleep(actualSleep);
+        } catch (InterruptedException ignored) {}
+    }
 
-        String[] columns = {"Algorithm", "Initial Array", "Sorted Array", "Date/Time"};
-        DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
-        JTable table = new JTable(tableModel);
-
-        table.setBackground(COLOR_PANEL_BG);
-        table.setForeground(COLOR_TEXT_HEADER);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setRowHeight(36);
-        table.setShowGrid(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(46, 117, 89));
-        table.setSelectionForeground(Color.WHITE);
-
-        table.getTableHeader().setBackground(new Color(35, 42, 52));
-        table.getTableHeader().setForeground(COLOR_TEXT_HEADER);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        table.getTableHeader().setBorder(BorderFactory.createEmptyBorder());
-        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
-
-        DefaultTableCellRenderer paddedRenderer = new DefaultTableCellRenderer();
-        paddedRenderer.setBorder(new EmptyBorder(0, 10, 0, 10));
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(paddedRenderer);
-        }
-
-        Runnable loadTableData = () -> {
-            tableModel.setRowCount(0);
-            String sql = "SELECT algorithm_name, input_array, sorted_array, timestamp FROM user_sort_history WHERE username = ? ORDER BY timestamp DESC";
-            try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                pstmt.setString(1, currentUser);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        tableModel.addRow(new Object[]{
-                                rs.getString("algorithm_name"),
-                                rs.getString("input_array"),
-                                rs.getString("sorted_array"),
-                                rs.getTimestamp("timestamp")
-                        });
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        };
-
-        loadTableData.run();
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.getViewport().setBackground(COLOR_PANEL_BG);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
-        bottomPanel.setBackground(COLOR_MAIN_BG);
-
-        JButton clearHistoryBtn = LoginPanel.createButton("🗑️ Delete All My History", new Color(180, 60, 60), Color.WHITE);
-        clearHistoryBtn.setPreferredSize(new Dimension(200, 38));
-        clearHistoryBtn.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(
-                    historyDialog,
-                    "Are you sure you want to delete all your sort history logs?",
-                    "Confirm Deletion",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE
-            );
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                String deleteSql = "DELETE FROM user_sort_history WHERE username = ?";
-                try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
-                     PreparedStatement pstmt = conn.prepareStatement(deleteSql)) {
-
-                    pstmt.setString(1, currentUser);
-                    int deletedRows = pstmt.executeUpdate();
-
-                    JOptionPane.showMessageDialog(historyDialog, "Deleted " + deletedRows + " history records.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    loadTableData.run();
-
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(historyDialog, "Error deleting history records.", "Database Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
+    private void logMessage(String msg) {
+        SwingUtilities.invokeLater(() -> {
+            logTextArea.append(msg + "\n");
+            logTextArea.setCaretPosition(logTextArea.getDocument().getLength());
         });
-
-        bottomPanel.add(clearHistoryBtn);
-
-        historyDialog.add(scrollPane, BorderLayout.CENTER);
-        historyDialog.add(bottomPanel, BorderLayout.SOUTH);
-        historyDialog.setVisible(true);
     }
 
     private class BubbleVisualizerPanel extends JPanel {
@@ -1330,7 +1139,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
             int totalSteps = sortingStepsHistory.size();
             int verticalGap = 75; 
             int requiredHeight = Math.max(420, (totalSteps + 1) * verticalGap + 50);
-
             setPreferredSize(new Dimension(600, requiredHeight));
             revalidate();
         }
