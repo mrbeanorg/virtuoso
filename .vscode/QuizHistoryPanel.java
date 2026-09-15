@@ -15,7 +15,6 @@ public class QuizHistoryPanel extends JPanel {
     private static final Color COLOR_PANEL_BG = new Color(28, 33, 40, 240);
     private static final Color COLOR_CANVAS_BG = new Color(15, 18, 22);
     private static final Color COLOR_TEXT_HEADER = new Color(240, 245, 250);
-    private static final Color COLOR_TEXT_MUTED = new Color(150, 165, 180);
     private static final Color COLOR_ACCENT_GREEN = new Color(46, 204, 113);
     private static final Color COLOR_BORDER = new Color(48, 55, 65);
 
