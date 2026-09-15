@@ -5,7 +5,7 @@ import java.sql.Statement;
 
 public class DatabaseApp {
     
-    public static final String DB_URL = "jdbc:mysql://localhost:3306/virtuso";
+    public static final String DB_URL = "jdbc:mysql://localhost:3306/virtuso"; // Update if using cloud DB
     public static final String DB_USER = "root"; 
     public static final String DB_PASS = "";     
 
@@ -48,10 +48,21 @@ public class DatabaseApp {
                 "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
             );
 
+            // 4. NEW: User Knowledge Bank Table (For PDF Extracts)
+            stmt.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS user_knowledge_bank (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "username VARCHAR(100) NOT NULL, " +
+                "question TEXT NOT NULL, " +
+                "answer TEXT NOT NULL, " +
+                "source_file VARCHAR(255), " +
+                "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            );
+
             System.out.println("Database connection established and active tables verified successfully.");
 
         } catch (SQLException e) {
-            System.err.println("Database initialization failed. Please make sure XAMPP/MySQL is running and the 'virtuso' database exists.");
+            System.err.println("Database initialization failed. Please make sure MySQL is running.");
             e.printStackTrace();
         }
     }

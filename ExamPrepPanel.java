@@ -5,11 +5,17 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 // Import Apache PDFBox classes for reading PDFs
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 public class ExamPrepPanel extends JPanel {
@@ -27,6 +33,7 @@ public class ExamPrepPanel extends JPanel {
     
     private DefaultListModel<String> questionListModel;
     private ArrayList<String> answersList;
+    private ArrayList<Integer> dbIds; // Tracks the MySQL Primary Keys
     private JList<String> questionList;
 
     public ExamPrepPanel(String activeUser, Runnable onBackToMenu) {
@@ -37,28 +44,61 @@ public class ExamPrepPanel extends JPanel {
 
         questionListModel = new DefaultListModel<>();
         answersList = new ArrayList<>();
-        loadDefaultQuestions();
+        dbIds = new ArrayList<>();
+        
+        loadQuestionsFromDB(); // Automatically loads user's saved data
 
         add(createHeaderPanel(onBackToMenu), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
     }
 
-    private void loadDefaultQuestions() {
-        String[] defaultQuestions = {
-            "Q1: Define a stable sorting algorithm. Give an example.",
-            "Q2: Differentiate between internal and external sorting.",
-            "Q3: Outline the time complexities of Quick Sort."
-        };
+    private void loadQuestionsFromDB() {
+        String sql = "SELECT id, question, answer FROM user_knowledge_bank WHERE username = ? ORDER BY id ASC";
+        try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, currentUser);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    dbIds.add(rs.getInt("id"));
+                    questionListModel.addElement(rs.getString("question"));
+                    answersList.add(rs.getString("answer"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Could not load knowledge bank. The panel will remain blank until new data is saved.");
+        }
+    }
 
-        String[] defaultAnswers = {
-            "<b>Answer:</b><br><br>A sorting algorithm is considered <b>stable</b> if it preserves the relative order of equal elements in the sorted output.",
-            "<b>Answer:</b><br><br><b>Internal Sorting:</b> All data fits in RAM.<br><b>External Sorting:</b> Uses auxiliary storage for massive datasets.",
-            "<b>Answer:</b><br><br>Quick Sort Complexities:<br>• Best/Average: O(n log n)<br>• Worst Case: O(n²)"
-        };
+    private void saveQuestionToDB(String question, String answer, String sourceFile) {
+        String sql = "INSERT INTO user_knowledge_bank (username, question, answer, source_file) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, currentUser);
+            pstmt.setString(2, question);
+            pstmt.setString(3, answer);
+            pstmt.setString(4, sourceFile);
+            pstmt.executeUpdate();
+            
+            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    dbIds.add(rs.getInt(1)); // Add the new auto-generated ID to our tracking list
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            dbIds.add(-1); // Fallback so indexes stay aligned if saving fails
+        }
+    }
 
-        for (int i = 0; i < defaultQuestions.length; i++) {
-            questionListModel.addElement(defaultQuestions[i]);
-            answersList.add(defaultAnswers[i]);
+    private void deleteQuestionFromDB(int id) {
+        if (id == -1) return;
+        String sql = "DELETE FROM user_knowledge_bank WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DatabaseApp.DB_URL, DatabaseApp.DB_USER, DatabaseApp.DB_PASS);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -78,9 +118,22 @@ public class ExamPrepPanel extends JPanel {
         userBadge.setForeground(COLOR_TEXT_HEADER);
         userBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JButton uploadBtn = createButton("📁 Upload PDF / Notes", new Color(55, 75, 95), Color.WHITE);
-        uploadBtn.setPreferredSize(new Dimension(170, 38));
+        JButton uploadBtn = createButton("📁 Upload Notes", new Color(55, 75, 95), Color.WHITE);
+        uploadBtn.setPreferredSize(new Dimension(140, 38));
         uploadBtn.addActionListener(e -> handleDocumentUpload());
+
+        // --- NEW QUIZ BUTTON ---
+        JButton quizBtn = createButton("🧠 Start Quiz", new Color(155, 89, 182), Color.WHITE);
+        quizBtn.setPreferredSize(new Dimension(130, 38));
+        quizBtn.addActionListener(e -> {
+            if (questionListModel.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Your knowledge bank is empty! Upload some notes first.", "Cannot Start Quiz", JOptionPane.WARNING_MESSAGE);
+            } else {
+                Window parentWindow = SwingUtilities.getWindowAncestor(this);
+                // Launch our new decoupled KnowledgeQuizEngine class
+                new KnowledgeQuizEngine(parentWindow, questionListModel, answersList).setVisible(true);
+            }
+        });
 
         JButton backBtn = createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
         backBtn.setPreferredSize(new Dimension(110, 38));
@@ -90,6 +143,7 @@ public class ExamPrepPanel extends JPanel {
 
         rightControls.add(userBadge);
         rightControls.add(uploadBtn);
+        rightControls.add(quizBtn); // Add the quiz button to the UI
         rightControls.add(backBtn);
 
         header.add(titleLabel, BorderLayout.WEST);
@@ -108,12 +162,12 @@ public class ExamPrepPanel extends JPanel {
 
             try {
                 int addedCount = 0;
+                String extractedText = "";
                 
                 if (fileName.endsWith(".pdf")) {
                     try (PDDocument document = Loader.loadPDF(selectedFile)) {
                         PDFTextStripper stripper = new PDFTextStripper();
-                        String extractedText = stripper.getText(document);
-                        addedCount = parseAndStoreContent(extractedText);
+                        extractedText = stripper.getText(document);
                     }
                 } else if (fileName.endsWith(".txt")) {
                     StringBuilder sb = new StringBuilder();
@@ -123,20 +177,27 @@ public class ExamPrepPanel extends JPanel {
                             sb.append(line).append("\n");
                         }
                     }
-                    addedCount = parseAndStoreContent(sb.toString());
+                    extractedText = sb.toString();
                 }
 
-                JOptionPane.showMessageDialog(this, "Successfully extracted and imported " + addedCount + " questions from document!", "Import Success", JOptionPane.INFORMATION_MESSAGE);
+                addedCount = parseAndStoreContent(extractedText, selectedFile.getName());
+
+                JOptionPane.showMessageDialog(this, "Successfully extracted and permanently saved " + addedCount + " items!", "Import Success", JOptionPane.INFORMATION_MESSAGE);
+                
+                // Automatically select the newly imported item
+                if (questionListModel.getSize() > 0) {
+                    questionList.setSelectedIndex(questionListModel.getSize() - 1);
+                }
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error reading document. Ensure the file contains structured 'Q:' and 'A:' tags.", "Import Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error reading document. Make sure the file isn't corrupted.", "Import Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
         }
     }
 
-    private int parseAndStoreContent(String fullText) {
+    private int parseAndStoreContent(String fullText, String fileName) {
         int count = 0;
-        // Normalize line breaks and clean up extra spaces
         String[] lines = fullText.split("\\r?\\n");
         String currentQ = null;
         StringBuilder currentA = new StringBuilder();
@@ -145,33 +206,42 @@ public class ExamPrepPanel extends JPanel {
             String line = rawLine.trim();
             if (line.isEmpty()) continue;
 
-            // Flexible regex to catch "Q1:", "Q:", "Question 1:", "Q.", etc. (case-insensitive)
-            if (line.matches("(?i)^(question\\s*\\d*|[Qq])([\\.:)]\\s*|\\s+).*")) {
-                // If we were already building a question, save it before starting the new one
+            if (line.matches("(?i)^(q|question|q\\d+)[^\\w\\n]*\\s*(.*)")) {
                 if (currentQ != null) {
+                    String formattedAnswer = "<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "<i>No answer text found.</i>");
+                    saveQuestionToDB(currentQ, formattedAnswer, fileName);
                     questionListModel.addElement(currentQ);
-                    answersList.add("<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "See study notes."));
+                    answersList.add(formattedAnswer);
                     count++;
                     currentA.setLength(0);
                 }
-                // Strip the Q prefix tag cleanly
-                currentQ = line.replaceFirst("(?i)^(question\\s*\\d*|[Qq])[\\.:)]?\\s*", "").trim();
+                currentQ = line.replaceFirst("(?i)^(q|question|q\\d+)[^\\w\\n]*\\s*", "").trim();
+                if (currentQ.isEmpty()) currentQ = "Extracted Question";
             } 
-            // Flexible regex to catch "A:", "Answer:", "Ans:", etc.
-            else if (line.matches("(?i)^(answer|ans)([\\.:)]\\s*|\\s+).*")) {
-                String ansText = line.replaceFirst("(?i)^(answer|ans)[\\.:)]?\\s*", "").trim();
+            else if (line.matches("(?i)^(a|answer|ans|a\\d+)[^\\w\\n]*\\s*(.*)")) {
+                String ansText = line.replaceFirst("(?i)^(a|answer|ans|a\\d+)[^\\w\\n]*\\s*", "").trim();
                 currentA.append(ansText).append("<br>");
             } 
-            // If we are currently inside an answer block, keep appending text lines
             else if (currentQ != null) {
                 currentA.append(line).append("<br>");
             }
         }
 
-        // Save the final pending question in the file
         if (currentQ != null) {
+            String formattedAnswer = "<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "<i>No answer text found.</i>");
+            saveQuestionToDB(currentQ, formattedAnswer, fileName);
             questionListModel.addElement(currentQ);
-            answersList.add("<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "See study notes."));
+            answersList.add(formattedAnswer);
+            count++;
+        }
+
+        if (count == 0 && !fullText.trim().isEmpty()) {
+            String qTitle = "📄 Study Notes: " + fileName;
+            String formattedText = "<b>Document Contents:</b><br><br>" + fullText.replace("\n", "<br>");
+            
+            saveQuestionToDB(qTitle, formattedText, fileName);
+            questionListModel.addElement(qTitle);
+            answersList.add(formattedText);
             count++;
         }
 
@@ -185,10 +255,10 @@ public class ExamPrepPanel extends JPanel {
         // --- LEFT SIDEBAR: Question List ---
         JPanel leftPanel = createRoundedCard();
         leftPanel.setLayout(new BorderLayout());
-        leftPanel.setPreferredSize(new Dimension(320, 0));
+        leftPanel.setPreferredSize(new Dimension(340, 0));
         leftPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        JLabel listTitle = new JLabel("EXTRACTED KNOWLEDGE BANK");
+        JLabel listTitle = new JLabel("MY KNOWLEDGE BANK");
         listTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
         listTitle.setForeground(COLOR_TEXT_MUTED);
         listTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
@@ -208,7 +278,7 @@ public class ExamPrepPanel extends JPanel {
                 label.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
                 
                 String text = value.toString();
-                if (text.length() > 38) text = text.substring(0, 35) + "...";
+                if (text.length() > 40) text = text.substring(0, 37) + "...";
                 label.setText(text);
 
                 JPanel card = new JPanel(new BorderLayout()) {
@@ -233,7 +303,8 @@ public class ExamPrepPanel extends JPanel {
                 int idx = questionList.getSelectedIndex();
                 if (idx != -1 && idx < answersList.size()) {
                     currentQuestionTitle.setText(questionListModel.getElementAt(idx));
-                    answerDisplayPane.setText("<html><body style='color:#f0f5fa; font-family:Segoe UI; font-size:14px; line-height: 1.6;'>" + answersList.get(idx) + "</body></html>");
+                    answerDisplayPane.setText("<html><body style='color:#f0f5fa; font-family:Segoe UI; font-size:14px; line-height: 1.6; padding-right:15px;'>" + answersList.get(idx) + "</body></html>");
+                    answerDisplayPane.setCaretPosition(0); 
                 }
             }
         });
@@ -251,9 +322,42 @@ public class ExamPrepPanel extends JPanel {
         rightPanel.setLayout(new BorderLayout(0, 20));
         rightPanel.setBorder(new EmptyBorder(30, 35, 30, 35));
 
-        currentQuestionTitle = new JLabel("Select an extracted question...");
+        JPanel rightHeaderPanel = new JPanel(new BorderLayout());
+        rightHeaderPanel.setOpaque(false);
+
+        currentQuestionTitle = new JLabel("Select a question to review...");
         currentQuestionTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         currentQuestionTitle.setForeground(COLOR_ACCENT_GREEN);
+
+        JButton deleteBtn = createButton("🗑️ Delete Selected", new Color(180, 60, 60), Color.WHITE);
+        deleteBtn.setPreferredSize(new Dimension(160, 32));
+        deleteBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        deleteBtn.addActionListener(e -> {
+            int selectedIndex = questionList.getSelectedIndex();
+            if (selectedIndex != -1) {
+                // Delete from MySQL Database
+                int dbId = dbIds.get(selectedIndex);
+                deleteQuestionFromDB(dbId);
+                
+                // Remove from UI Lists
+                questionListModel.remove(selectedIndex);
+                answersList.remove(selectedIndex);
+                dbIds.remove(selectedIndex);
+                
+                if (questionListModel.isEmpty()) {
+                    currentQuestionTitle.setText("Knowledge Bank Empty");
+                    answerDisplayPane.setText("");
+                } else {
+                    int nextIndex = (selectedIndex >= questionListModel.getSize()) ? questionListModel.getSize() - 1 : selectedIndex;
+                    questionList.setSelectedIndex(nextIndex);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select an item to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+        rightHeaderPanel.add(currentQuestionTitle, BorderLayout.CENTER);
+        rightHeaderPanel.add(deleteBtn, BorderLayout.EAST);
 
         answerDisplayPane = new JTextPane();
         answerDisplayPane.setEditable(false);
@@ -266,8 +370,9 @@ public class ExamPrepPanel extends JPanel {
         answerScroll.setOpaque(false);
         answerScroll.getViewport().setOpaque(false);
         answerScroll.setBorder(BorderFactory.createEmptyBorder());
+        answerScroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        rightPanel.add(currentQuestionTitle, BorderLayout.NORTH);
+        rightPanel.add(rightHeaderPanel, BorderLayout.NORTH);
         rightPanel.add(answerScroll, BorderLayout.CENTER);
 
         splitContainer.add(leftPanel, BorderLayout.WEST);
