@@ -22,16 +22,7 @@ public class DatabaseApp {
         return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
     }
 
-    public static void initializePasswordTable() {
-        String createVaultTableSQL = "CREATE TABLE IF NOT EXISTS user_saved_passwords (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "logged_in_username VARCHAR(100) NOT NULL, " +
-                "app_name VARCHAR(150) NOT NULL, " +
-                "account_username VARCHAR(150) NOT NULL, " +
-                "generated_password VARCHAR(255) NOT NULL, " +
-                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-                ");";
-
+    public static void initializeTables() {
         String createLoginTableSQL = "CREATE TABLE IF NOT EXISTS student_login (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "username VARCHAR(100) NOT NULL UNIQUE, " +
@@ -49,7 +40,6 @@ public class DatabaseApp {
                 "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                 ");";
 
-        // NEW: Table for Quiz Mode tracking
         String createQuizTableSQL = "CREATE TABLE IF NOT EXISTS user_quiz_history (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
                 "username VARCHAR(100) NOT NULL, " +
@@ -62,10 +52,9 @@ public class DatabaseApp {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
              Statement stmt = conn.createStatement()) {
             
-            stmt.execute(createVaultTableSQL);
             stmt.execute(createLoginTableSQL);
             stmt.execute(createHistoryTableSQL);
-            stmt.execute(createQuizTableSQL); // Execute new table creation
+            stmt.execute(createQuizTableSQL); 
             
             System.out.println("✅ Database connection successful. Schema verified.");
 

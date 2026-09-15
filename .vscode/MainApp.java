@@ -15,13 +15,13 @@ public class MainApp extends JFrame {
     private String loggedInUser = "alan";
 
     public MainApp() {
-        setTitle("Virtuoso - Secure Password Generator & Vault");
+        setTitle("Virtuoso - Algorithm Tutor & 3-Mark Q&A Bank");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 740);
         setLocationRelativeTo(null);
         setResizable(true);
 
-        DatabaseApp.initializePasswordTable();
+        DatabaseApp.initializeTables();
 
         cardLayout = new CardLayout();
         mainContainer = new JPanel(cardLayout);
