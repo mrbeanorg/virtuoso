@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 public class DatabaseApp {
     
-    public static final String DB_URL = "jdbc:mysql://localhost:3306/virtuso";
+    public static final String DB_URL = "jdbc:http://localhost/phpmyadmin/index.php?route=/database/structure&db=virtuso";
     public static final String DB_USER = "root"; 
     public static final String DB_PASS = "";     
 
