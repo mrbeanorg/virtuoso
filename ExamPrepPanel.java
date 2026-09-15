@@ -206,27 +206,33 @@ public class ExamPrepPanel extends JPanel {
             String line = rawLine.trim();
             if (line.isEmpty()) continue;
 
-            if (line.matches("(?i)^(q|question|q\\d+)[^\\w\\n]*\\s*(.*)")) {
+            // Highly aggressive regex: catches "Q:", "Question 1:", "1.", "1)", etc.
+            if (line.matches("(?i)^(q(?:uestion)?\\s*\\d*|\\d+)\\s*[\\.\\:\\)\\-]\\s*(.*)")) {
                 if (currentQ != null) {
                     String formattedAnswer = "<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "<i>No answer text found.</i>");
                     saveQuestionToDB(currentQ, formattedAnswer, fileName);
                     questionListModel.addElement(currentQ);
                     answersList.add(formattedAnswer);
                     count++;
-                    currentA.setLength(0);
+                    currentA.setLength(0); // Reset for next answer
                 }
-                currentQ = line.replaceFirst("(?i)^(q|question|q\\d+)[^\\w\\n]*\\s*", "").trim();
+                // Extract just the question text, stripping the number/prefix
+                currentQ = line.replaceFirst("(?i)^(q(?:uestion)?\\s*\\d*|\\d+)\\s*[\\.\\:\\)\\-]\\s*", "").trim();
                 if (currentQ.isEmpty()) currentQ = "Extracted Question";
             } 
-            else if (line.matches("(?i)^(a|answer|ans|a\\d+)[^\\w\\n]*\\s*(.*)")) {
-                String ansText = line.replaceFirst("(?i)^(a|answer|ans|a\\d+)[^\\w\\n]*\\s*", "").trim();
+            // Aggressive Answer regex: catches "A:", "Answer:", "Ans:", or just bullet points "->"
+            else if (line.matches("(?i)^(a(?:nswer|ns)?\\s*\\d*)\\s*[\\.\\:\\)\\-]\\s*(.*)") || line.matches("(?i)^(\\*\\*answer\\*\\*|->|=>)\\s*(.*)")) {
+                String ansText = line.replaceFirst("(?i)^(a(?:nswer|ns)?\\s*\\d*)\\s*[\\.\\:\\)\\-]\\s*", "").trim();
+                ansText = ansText.replaceFirst("(?i)^(\\*\\*answer\\*\\*|->|=>)\\s*", "");
                 currentA.append(ansText).append("<br>");
             } 
             else if (currentQ != null) {
+                // If it's just a normal sentence, attach it to the current answer block
                 currentA.append(line).append("<br>");
             }
         }
 
+        // Save the last question in the file
         if (currentQ != null) {
             String formattedAnswer = "<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "<i>No answer text found.</i>");
             saveQuestionToDB(currentQ, formattedAnswer, fileName);
@@ -235,10 +241,10 @@ public class ExamPrepPanel extends JPanel {
             count++;
         }
 
+        // Smart Fallback if the parser found zero split questions
         if (count == 0 && !fullText.trim().isEmpty()) {
             String qTitle = "📄 Study Notes: " + fileName;
             String formattedText = "<b>Document Contents:</b><br><br>" + fullText.replace("\n", "<br>");
-            
             saveQuestionToDB(qTitle, formattedText, fileName);
             questionListModel.addElement(qTitle);
             answersList.add(formattedText);
