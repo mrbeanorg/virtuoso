@@ -21,7 +21,7 @@ public class MainApp extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 740);
         setLocationRelativeTo(null);
-        setResizable(false); 
+        setResizable(true); 
 
         DatabaseApp.initializeTables();
 

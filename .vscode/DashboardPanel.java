@@ -57,12 +57,14 @@ public class DashboardPanel extends StyledBackgroundPanel {
         titleLabel.setForeground(new Color(240, 245, 250));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton passGenBtn = LoginPanel.createButton("1. Password Generator", new Color(46, 117, 89), Color.WHITE);
+        // Updated Buttons
+        JButton examPrepBtn = LoginPanel.createButton("1. 3-Mark Q&A Bank", new Color(46, 117, 89), Color.WHITE);
         JButton virtuosoBtn = LoginPanel.createButton("2. Algorithm Virtuoso", new Color(46, 117, 89), Color.WHITE);
         JButton logoutBtn = LoginPanel.createButton("3. Logout", new Color(55, 65, 80), Color.WHITE);
         JButton exitBtn = LoginPanel.createButton("4. Exit Application", new Color(180, 50, 50), Color.WHITE);
 
-        passGenBtn.addActionListener(e -> { successBanner.setVisible(false); app.showView("VAULT"); });
+        // Updated Routing Actions
+        examPrepBtn.addActionListener(e -> { successBanner.setVisible(false); app.showView("EXAM_PREP"); });
         virtuosoBtn.addActionListener(e -> { successBanner.setVisible(false); app.showView("VIRTUOSO"); });
         logoutBtn.addActionListener(e -> { successBanner.setVisible(false); app.showView("LOGIN"); });
         exitBtn.addActionListener(e -> System.exit(0));
@@ -71,7 +73,7 @@ public class DashboardPanel extends StyledBackgroundPanel {
         card.add(Box.createVerticalStrut(20));
         card.add(titleLabel);
         card.add(Box.createVerticalStrut(40));
-        card.add(passGenBtn);
+        card.add(examPrepBtn);
         card.add(Box.createVerticalStrut(15));
         card.add(virtuosoBtn);
         card.add(Box.createVerticalStrut(15));

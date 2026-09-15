@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 12, 2026 at 06:37 AM
+-- Generation Time: Sep 15, 2026 at 03:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,33 +41,31 @@ CREATE TABLE `student_login` (
 INSERT INTO `student_login` (`id`, `username`, `password`, `email`) VALUES
 (1, 'alan', '1234', 'alan@gmail.com'),
 (2, 'alen', '098', 'alen@gmail.com'),
-(3, 'ajay', 'ajayy', 'ajay@ajay'),
-(4, 'shaji', '12345678', 'asdfghjkl'),
-(5, 'appi', 'appi', 'appiajay');
+(6, 'aleng', '789', 'aleng@gmail.com');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_saved_passwords`
+-- Table structure for table `user_quiz_history`
 --
 
-CREATE TABLE `user_saved_passwords` (
+CREATE TABLE `user_quiz_history` (
   `id` int(11) NOT NULL,
-  `logged_in_username` varchar(100) NOT NULL,
-  `app_name` varchar(150) NOT NULL,
-  `account_username` varchar(150) NOT NULL,
-  `generated_password` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `username` varchar(100) NOT NULL,
+  `actual_algorithm` varchar(100) NOT NULL,
+  `user_guess` varchar(100) NOT NULL,
+  `is_correct` tinyint(1) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user_saved_passwords`
+-- Dumping data for table `user_quiz_history`
 --
 
-INSERT INTO `user_saved_passwords` (`id`, `logged_in_username`, `app_name`, `account_username`, `generated_password`, `created_at`) VALUES
-(5, 'alan', 'Google', 'alan.wilson@gmail.com', 't8sqDBiqfZ]9:@', '2026-07-17 15:25:02'),
-(8, 'shaji', 'konami', 'alenshaji098@gmail.com', '_aXcV>aU', '2026-07-18 04:05:31'),
-(9, 'shaji', 'vivo', 'alenshaji098@gmail.com', 'Xx|r2z;l', '2026-07-18 04:08:35');
+INSERT INTO `user_quiz_history` (`id`, `username`, `actual_algorithm`, `user_guess`, `is_correct`, `timestamp`) VALUES
+(20, 'alan', 'Bucket Sort', 'Bucket Sort', 1, '2026-09-15 06:02:29'),
+(21, 'alan', 'Selection Sort', 'Bubble Sort', 0, '2026-09-15 06:03:01'),
+(22, 'alan', 'Heap Sort', 'Heap Sort', 1, '2026-09-15 07:39:20');
 
 -- --------------------------------------------------------
 
@@ -89,17 +87,8 @@ CREATE TABLE `user_sort_history` (
 --
 
 INSERT INTO `user_sort_history` (`id`, `username`, `algorithm_name`, `input_array`, `sorted_array`, `timestamp`) VALUES
-(9, 'alan', 'Selection Sort (Max)', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 13:20:19'),
-(10, 'alan', 'Selection Sort (Min)', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 13:20:40'),
-(11, 'alan', 'Selection Sort (Ascending)', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 13:24:27'),
-(12, 'alan', 'Selection Sort (Descending)', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 13:24:44'),
-(13, 'alan', 'Selection Sort (Descending)', '[45, 12, 89, 23, 7, 67, 34]', '[89, 67, 45, 34, 23, 12, 7]', '2026-07-17 13:27:29'),
-(14, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 15:07:37'),
-(15, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-17 15:25:31'),
-(16, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-07-18 03:43:33'),
-(17, 'alan', 'Selection Sort (Descending)', '[3, 4, 6, 8, 9, 0]', '[9, 8, 6, 4, 3, 0]', '2026-07-18 03:52:21'),
-(18, 'alan', 'Selection Sort (Ascending)', '[3, 4, 6, 8, 9, 0]', '[0, 3, 4, 6, 8, 9]', '2026-07-18 03:52:49'),
-(19, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-12 01:21:39');
+(54, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 06:01:50'),
+(55, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 07:38:37');
 
 --
 -- Indexes for dumped tables
@@ -112,9 +101,9 @@ ALTER TABLE `student_login`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `user_saved_passwords`
+-- Indexes for table `user_quiz_history`
 --
-ALTER TABLE `user_saved_passwords`
+ALTER TABLE `user_quiz_history`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -131,19 +120,19 @@ ALTER TABLE `user_sort_history`
 -- AUTO_INCREMENT for table `student_login`
 --
 ALTER TABLE `student_login`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `user_saved_passwords`
+-- AUTO_INCREMENT for table `user_quiz_history`
 --
-ALTER TABLE `user_saved_passwords`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+ALTER TABLE `user_quiz_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `user_sort_history`
 --
 ALTER TABLE `user_sort_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
