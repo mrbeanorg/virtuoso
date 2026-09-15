@@ -1,6 +1,16 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.ArrayList;
+
+// Import Apache PDFBox classes for reading PDFs
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.Loader;
 
 public class ExamPrepPanel extends JPanel {
 
@@ -14,27 +24,10 @@ public class ExamPrepPanel extends JPanel {
     private String currentUser;
     private JTextPane answerDisplayPane;
     private JLabel currentQuestionTitle;
-
-    // 3-Mark Question Database
-    private final String[] questions = {
-        "Q1: Define a stable sorting algorithm. Give an example.",
-        "Q2: Differentiate between internal and external sorting.",
-        "Q3: Outline the time complexities of Quick Sort.",
-        "Q4: Explain the basic principle of Radix Sort.",
-        "Q5: Why is Insertion Sort efficient for small datasets?",
-        "Q6: What is the primary advantage of Merge Sort?",
-        "Q7: Explain the concept of a 'Pivot' in sorting."
-    };
-
-    private final String[] answers = {
-        "<b>Answer:</b><br><br>A sorting algorithm is considered <b>stable</b> if it preserves the relative order of equal elements in the sorted output. For example, if two distinct items possess the same sorting key, the one that appeared first in the original unsorted list will consistently appear first in the sorted list.<br><br><b>Examples:</b> Merge Sort and Bubble Sort are stable. Quick Sort and Heap Sort are inherently unstable.",
-        "<b>Answer:</b><br><br><b>Internal Sorting:</b> Refers to algorithms where all the data to be sorted fits entirely within the computer's main memory (RAM) during the sorting process. <i>Examples: Bubble Sort, Quick Sort.</i><br><br><b>External Sorting:</b> Required when the dataset is too massive to fit into RAM, necessitating the use of external auxiliary storage (like hard drives) in chunks. <i>Example: External Merge Sort.</i>",
-        "<b>Answer:</b><br><br>Quick Sort operates on a Divide and Conquer principle. Its time complexities are:<br><br>• <b>Best Case: O(n log n)</b> - Occurs when the chosen pivot naturally divides the array into two perfectly equal halves.<br>• <b>Average Case: O(n log n)</b><br>• <b>Worst Case: O(n²)</b> - Occurs when the array is already completely sorted (or reverse sorted) and the smallest or largest element is consistently chosen as the pivot, leading to highly unbalanced partitions.",
-        "<b>Answer:</b><br><br><b>Radix Sort</b> is a specialized, non-comparison-based sorting algorithm. Instead of comparing elements against each other, it sorts elements digit by digit, typically starting from the least significant digit (LSD) and moving to the most significant digit (MSD).<br><br>It utilizes a stable intermediate algorithm (like Counting Sort) for each individual digit pass, ultimately achieving a linear time complexity of <b>O(d(n+k))</b>.",
-        "<b>Answer:</b><br><br><b>Insertion Sort</b> has a very low constant algorithmic overhead and operates in <b>O(n) best-case time complexity</b> when the array is already partially or mostly sorted. <br><br>Its highly adaptive nature makes it drastically faster than O(n log n) algorithms for very small datasets. Because of this efficiency, it is frequently used as the base-case fallback in advanced hybrid algorithms like Timsort (used in Python and Java).",
-        "<b>Answer:</b><br><br>The primary advantage of <b>Merge Sort</b> is its guaranteed, highly predictable performance. Regardless of the initial arrangement of the data (whether already sorted, reverse sorted, or completely randomized), Merge Sort will always run in <b>O(n log n)</b> time.<br><br>Additionally, it is a stable sort, making it ideal for sorting linked lists where contiguous memory allocation is not a constraint.",
-        "<b>Answer:</b><br><br>In the context of Quick Sort, a <b>Pivot</b> is a designated element selected from the array that acts as a structural reference point for partitioning.<br><br>During a sorting pass, all elements smaller than the pivot are shifted to its left, and all elements greater than the pivot are shifted to its right. The recursive efficiency of Quick Sort heavily relies on how close the pivot is to the actual median of the dataset."
-    };
+    
+    private DefaultListModel<String> questionListModel;
+    private ArrayList<String> answersList;
+    private JList<String> questionList;
 
     public ExamPrepPanel(String activeUser, Runnable onBackToMenu) {
         this.currentUser = activeUser;
@@ -42,8 +35,31 @@ public class ExamPrepPanel extends JPanel {
         setBackground(COLOR_MAIN_BG);
         setBorder(new EmptyBorder(25, 25, 25, 25));
 
+        questionListModel = new DefaultListModel<>();
+        answersList = new ArrayList<>();
+        loadDefaultQuestions();
+
         add(createHeaderPanel(onBackToMenu), BorderLayout.NORTH);
         add(createMainContent(), BorderLayout.CENTER);
+    }
+
+    private void loadDefaultQuestions() {
+        String[] defaultQuestions = {
+            "Q1: Define a stable sorting algorithm. Give an example.",
+            "Q2: Differentiate between internal and external sorting.",
+            "Q3: Outline the time complexities of Quick Sort."
+        };
+
+        String[] defaultAnswers = {
+            "<b>Answer:</b><br><br>A sorting algorithm is considered <b>stable</b> if it preserves the relative order of equal elements in the sorted output.",
+            "<b>Answer:</b><br><br><b>Internal Sorting:</b> All data fits in RAM.<br><b>External Sorting:</b> Uses auxiliary storage for massive datasets.",
+            "<b>Answer:</b><br><br>Quick Sort Complexities:<br>• Best/Average: O(n log n)<br>• Worst Case: O(n²)"
+        };
+
+        for (int i = 0; i < defaultQuestions.length; i++) {
+            questionListModel.addElement(defaultQuestions[i]);
+            answersList.add(defaultAnswers[i]);
+        }
     }
 
     private JPanel createHeaderPanel(Runnable onBackToMenu) {
@@ -51,7 +67,7 @@ public class ExamPrepPanel extends JPanel {
         header.setOpaque(false);
         header.setPreferredSize(new Dimension(0, 45));
 
-        JLabel titleLabel = new JLabel("Academic Prep - 3 Mark Questions");
+        JLabel titleLabel = new JLabel("Academic Prep & PDF Knowledge Extractor");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(COLOR_TEXT_HEADER);
 
@@ -62,6 +78,10 @@ public class ExamPrepPanel extends JPanel {
         userBadge.setForeground(COLOR_TEXT_HEADER);
         userBadge.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
+        JButton uploadBtn = createButton("📁 Upload PDF / Notes", new Color(55, 75, 95), Color.WHITE);
+        uploadBtn.setPreferredSize(new Dimension(170, 38));
+        uploadBtn.addActionListener(e -> handleDocumentUpload());
+
         JButton backBtn = createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
         backBtn.setPreferredSize(new Dimension(110, 38));
         backBtn.addActionListener(e -> {
@@ -69,11 +89,84 @@ public class ExamPrepPanel extends JPanel {
         });
 
         rightControls.add(userBadge);
+        rightControls.add(uploadBtn);
         rightControls.add(backBtn);
 
         header.add(titleLabel, BorderLayout.WEST);
         header.add(rightControls, BorderLayout.EAST);
         return header;
+    }
+
+    private void handleDocumentUpload() {
+        JFileChooser fileChooser = new JFileChooser();
+        // Allow user to select Text or PDF documents
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF & Text Documents (*.pdf, *.txt)", "pdf", "txt"));
+        int result = fileChooser.showOpenDialog(this);
+        
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            String fileName = selectedFile.getName().toLowerCase();
+
+            try {
+                int addedCount = 0;
+                
+                if (fileName.endsWith(".pdf")) {
+                    // Extract text from PDF using Apache PDFBox
+                    try (PDDocument document = Loader.loadPDF(selectedFile)) {
+                        PDFTextStripper stripper = new PDFTextStripper();
+                        String extractedText = stripper.getText(document);
+                        addedCount = parseAndStoreContent(extractedText);
+                    }
+                } else if (fileName.endsWith(".txt")) {
+                    // Read line by line from text file
+                    StringBuilder sb = new StringBuilder();
+                    try (BufferedReader br = new BufferedReader(new FileReader(selectedFile))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            sb.append(line).append("\n");
+                        }
+                    }
+                    addedCount = parseAndStoreContent(sb.toString());
+                }
+
+                JOptionPane.showMessageDialog(this, "Successfully extracted and imported " + addedCount + " questions from document!", "Import Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error reading document. Ensure the file contains structured 'Q:' and 'A:' tags.", "Import Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private int parseAndStoreContent(String fullText) {
+        int count = 0;
+        String[] lines = fullText.split("\\r?\\n");
+        String currentQ = null;
+        StringBuilder currentA = new StringBuilder();
+
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith("Q:")) {
+                if (currentQ != null) {
+                    questionListModel.addElement(currentQ);
+                    answersList.add("<b>Answer:</b><br><br>" + currentA.toString().trim());
+                    count++;
+                    currentA.setLength(0);
+                }
+                currentQ = line.substring(2).trim();
+            } else if (line.startsWith("A:")) {
+                currentA.append(line.substring(2).trim()).append("<br>");
+            } else if (currentQ != null && !line.isEmpty()) {
+                currentA.append(line).append("<br>");
+            }
+        }
+
+        // Add final queued question
+        if (currentQ != null) {
+            questionListModel.addElement(currentQ);
+            answersList.add("<b>Answer:</b><br><br>" + currentA.toString().trim());
+            count++;
+        }
+        return count;
     }
 
     private JPanel createMainContent() {
@@ -86,12 +179,12 @@ public class ExamPrepPanel extends JPanel {
         leftPanel.setPreferredSize(new Dimension(320, 0));
         leftPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        JLabel listTitle = new JLabel("UNIVERSITY QA BANK");
+        JLabel listTitle = new JLabel("EXTRACTED KNOWLEDGE BANK");
         listTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
         listTitle.setForeground(COLOR_TEXT_MUTED);
         listTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
 
-        JList<String> questionList = new JList<>(questions);
+        questionList = new JList<>(questionListModel);
         questionList.setOpaque(false);
         questionList.setBackground(new Color(0, 0, 0, 0));
         questionList.setForeground(COLOR_TEXT_HEADER);
@@ -129,9 +222,9 @@ public class ExamPrepPanel extends JPanel {
         questionList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int idx = questionList.getSelectedIndex();
-                if (idx != -1) {
-                    currentQuestionTitle.setText(questions[idx]);
-                    answerDisplayPane.setText("<html><body style='color:#f0f5fa; font-family:Segoe UI; font-size:14px; line-height: 1.6;'>" + answers[idx] + "</body></html>");
+                if (idx != -1 && idx < answersList.size()) {
+                    currentQuestionTitle.setText(questionListModel.getElementAt(idx));
+                    answerDisplayPane.setText("<html><body style='color:#f0f5fa; font-family:Segoe UI; font-size:14px; line-height: 1.6;'>" + answersList.get(idx) + "</body></html>");
                 }
             }
         });
@@ -149,7 +242,7 @@ public class ExamPrepPanel extends JPanel {
         rightPanel.setLayout(new BorderLayout(0, 20));
         rightPanel.setBorder(new EmptyBorder(30, 35, 30, 35));
 
-        currentQuestionTitle = new JLabel("Select a question from the bank...");
+        currentQuestionTitle = new JLabel("Select an extracted question...");
         currentQuestionTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         currentQuestionTitle.setForeground(COLOR_ACCENT_GREEN);
 
@@ -171,8 +264,9 @@ public class ExamPrepPanel extends JPanel {
         splitContainer.add(leftPanel, BorderLayout.WEST);
         splitContainer.add(rightPanel, BorderLayout.CENTER);
 
-        // Select the first question by default
-        questionList.setSelectedIndex(0);
+        if (!questionListModel.isEmpty()) {
+            questionList.setSelectedIndex(0);
+        }
 
         return splitContainer;
     }
