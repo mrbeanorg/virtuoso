@@ -13,6 +13,7 @@ public class MainApp extends JFrame {
     private ExamPrepPanel examPrepPanel;
     private SortHistoryPanel sortHistoryPanel;
     private QuizHistoryPanel quizHistoryPanel;
+    private TheoryPanel theoryPanel;
 
     private String loggedInUser = "alan";
 
@@ -79,6 +80,12 @@ public class MainApp extends JFrame {
             }
             quizHistoryPanel = new QuizHistoryPanel(loggedInUser, () -> showView("VIRTUOSO"));
             mainContainer.add(quizHistoryPanel, "QUIZ_HISTORY");
+        } else if (cardName.equals("THEORY")) {
+            if (theoryPanel != null) {
+                mainContainer.remove(theoryPanel);
+            }
+            theoryPanel = new TheoryPanel(loggedInUser, () -> showView("VIRTUOSO"));
+            mainContainer.add(theoryPanel, "THEORY");
         }
         cardLayout.show(mainContainer, cardName);
     }

@@ -119,7 +119,7 @@ public class AlgorithmVirtuosoPanel extends JPanel {
 
         JButton theoryBtn = LoginPanel.createButton("📘 Theory", new Color(55, 75, 95), Color.WHITE);
         theoryBtn.setPreferredSize(new Dimension(110, 38));
-        theoryBtn.addActionListener(e -> showTheoryDialog());
+        theoryBtn.addActionListener(e -> mainApp.showView("THEORY"));
 
         JButton backBtn = LoginPanel.createButton("Dashboard", new Color(55, 65, 80), Color.WHITE);
         backBtn.setPreferredSize(new Dimension(110, 38));
@@ -253,33 +253,15 @@ public class AlgorithmVirtuosoPanel extends JPanel {
     private void updateTheoryGuide(String algo) {
         String theoryHtml = "";
         switch (algo) {
-            case "Bubble Sort":
-                theoryHtml = "<b>Bubble Sort (Elementary)</b><br>• <i>Theory:</i> Compares adjacent items and swaps them if disordered.";
-                break;
-            case "Selection Sort":
-                theoryHtml = "<b>Selection Sort (Elementary)</b><br>• <i>Theory:</i> Scans for the absolute minimum/maximum and locks it.";
-                break;
-            case "Insertion Sort":
-                theoryHtml = "<b>Insertion Sort (Elementary)</b><br>• <i>Theory:</i> Builds sorted array like arranging cards in hand.";
-                break;
-            case "Merge Sort":
-                theoryHtml = "<b>Merge Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Recursively splits halves and merges back stably.";
-                break;
-            case "Quick Sort":
-                theoryHtml = "<b>Quick Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Partitions data around a chosen pivot.";
-                break;
-            case "Heap Sort":
-                theoryHtml = "<b>Heap Sort (Divide & Conquer)</b><br>• <i>Theory:</i> Uses binary heap to extract max elements.";
-                break;
-            case "Counting Sort":
-                theoryHtml = "<b>Counting Sort (Non-Comparison)</b><br>• <i>Theory:</i> Tallies key frequencies into buckets.";
-                break;
-            case "Radix Sort":
-                theoryHtml = "<b>Radix Sort (Non-Comparison)</b><br>• <i>Theory:</i> Sorts individual integer digits sequentially.";
-                break;
-            case "Bucket Sort":
-                theoryHtml = "<b>Bucket Sort (Non-Comparison)</b><br>• <i>Theory:</i> Scatters items across partitioned intervals.";
-                break;
+            case "Bubble Sort": theoryHtml = "<b>Bubble Sort</b><br>• Compares adjacent items."; break;
+            case "Selection Sort": theoryHtml = "<b>Selection Sort</b><br>• Scans for absolute minimum."; break;
+            case "Insertion Sort": theoryHtml = "<b>Insertion Sort</b><br>• Builds sorted array incrementally."; break;
+            case "Merge Sort": theoryHtml = "<b>Merge Sort</b><br>• Divide and conquer halves."; break;
+            case "Quick Sort": theoryHtml = "<b>Quick Sort</b><br>• Partitions around a pivot."; break;
+            case "Heap Sort": theoryHtml = "<b>Heap Sort</b><br>• Leverages binary heap."; break;
+            case "Counting Sort": theoryHtml = "<b>Counting Sort</b><br>• Tallies element frequencies."; break;
+            case "Radix Sort": theoryHtml = "<b>Radix Sort</b><br>• Sorts digit by digit."; break;
+            case "Bucket Sort": theoryHtml = "<b>Bucket Sort</b><br>• Scatters items into intervals."; break;
         }
         theoryGuidePane.setText("<html><body style='color:#d0d5da; font-family:Segoe UI; font-size:11px;'>" + theoryHtml + "</body></html>");
     }
@@ -1054,37 +1036,6 @@ public class AlgorithmVirtuosoPanel extends JPanel {
         resultDialog.add(card, BorderLayout.CENTER);
         resultDialog.getContentPane().setBackground(COLOR_MAIN_BG);
         resultDialog.setVisible(true);
-    }
-
-    private void showTheoryDialog() {
-        JDialog theoryDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Algorithm Theory & Tutor Reference", true);
-        theoryDialog.setSize(750, 600);
-        theoryDialog.setLocationRelativeTo(this);
-        theoryDialog.setLayout(new BorderLayout());
-        theoryDialog.getContentPane().setBackground(COLOR_MAIN_BG);
-
-        String html = "<html><body style='color:#f0f5fa; font-family:Segoe UI; padding:15px; font-size:12px;'>" +
-            "<h2 style='color:#2ecc71;'>Sorting Algorithm Categories</h2>" +
-            "<p>Sorting algorithms organize data into a specific order by systematically comparing and swapping elements.</p>" +
-            "</body></html>";
-
-        JLabel content = new JLabel(html);
-        JScrollPane scroll = new JScrollPane(content);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.getViewport().setBackground(COLOR_PANEL_BG);
-
-        theoryDialog.add(scroll, BorderLayout.CENTER);
-        
-        JButton closeBtn = LoginPanel.createButton("Close", new Color(55, 65, 80), Color.WHITE);
-        closeBtn.setPreferredSize(new Dimension(100, 36));
-        closeBtn.addActionListener(e -> theoryDialog.dispose());
-        
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottom.setBackground(COLOR_MAIN_BG);
-        bottom.add(closeBtn);
-        
-        theoryDialog.add(bottom, BorderLayout.SOUTH);
-        theoryDialog.setVisible(true);
     }
 
     private void saveSortHistoryToDB(String user, String algo, String inputStr, String sortedStr) {
