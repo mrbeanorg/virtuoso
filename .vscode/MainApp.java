@@ -10,7 +10,9 @@ public class MainApp extends JFrame {
     private RegisterPanel registerPanel;
     private DashboardPanel dashboardPanel;
     private AlgorithmVirtuosoPanel virtuosoPanel;
-    private PasswordVaultPanel vaultPanel;
+    
+    // We replaced vaultPanel with your new ExamPrepPanel
+    private ExamPrepPanel examPrepPanel;
 
     private String loggedInUser = "alan";
 
@@ -19,7 +21,7 @@ public class MainApp extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 740);
         setLocationRelativeTo(null);
-        setResizable(true);
+        setResizable(false); 
 
         DatabaseApp.initializeTables();
 
@@ -59,12 +61,14 @@ public class MainApp extends JFrame {
             }
             virtuosoPanel = new AlgorithmVirtuosoPanel(loggedInUser, () -> showView("DASHBOARD"));
             mainContainer.add(virtuosoPanel, "VIRTUOSO");
-        } else if (cardName.equals("VAULT")) {
-            if (vaultPanel != null) {
-                mainContainer.remove(vaultPanel);
+            
+        // Load the new ExamPrepPanel instead of the old Vault
+        } else if (cardName.equals("EXAM_PREP")) {
+            if (examPrepPanel != null) {
+                mainContainer.remove(examPrepPanel);
             }
-            vaultPanel = new PasswordVaultPanel(loggedInUser, () -> showView("DASHBOARD"));
-            mainContainer.add(vaultPanel, "VAULT");
+            examPrepPanel = new ExamPrepPanel(loggedInUser, () -> showView("DASHBOARD"));
+            mainContainer.add(examPrepPanel, "EXAM_PREP");
         }
         cardLayout.show(mainContainer, cardName);
     }
