@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 // Import Apache PDFBox classes for reading PDFs
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 public class ExamPrepPanel extends JPanel {
 
@@ -99,7 +99,6 @@ public class ExamPrepPanel extends JPanel {
 
     private void handleDocumentUpload() {
         JFileChooser fileChooser = new JFileChooser();
-        // Allow user to select Text or PDF documents
         fileChooser.setFileFilter(new FileNameExtensionFilter("PDF & Text Documents (*.pdf, *.txt)", "pdf", "txt"));
         int result = fileChooser.showOpenDialog(this);
         
@@ -111,14 +110,12 @@ public class ExamPrepPanel extends JPanel {
                 int addedCount = 0;
                 
                 if (fileName.endsWith(".pdf")) {
-                    // Extract text from PDF using Apache PDFBox
                     try (PDDocument document = Loader.loadPDF(selectedFile)) {
                         PDFTextStripper stripper = new PDFTextStripper();
                         String extractedText = stripper.getText(document);
                         addedCount = parseAndStoreContent(extractedText);
                     }
                 } else if (fileName.endsWith(".txt")) {
-                    // Read line by line from text file
                     StringBuilder sb = new StringBuilder();
                     try (BufferedReader br = new BufferedReader(new FileReader(selectedFile))) {
                         String line;
@@ -139,33 +136,45 @@ public class ExamPrepPanel extends JPanel {
 
     private int parseAndStoreContent(String fullText) {
         int count = 0;
+        // Normalize line breaks and clean up extra spaces
         String[] lines = fullText.split("\\r?\\n");
         String currentQ = null;
         StringBuilder currentA = new StringBuilder();
 
-        for (String line : lines) {
-            line = line.trim();
-            if (line.startsWith("Q:")) {
+        for (String rawLine : lines) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) continue;
+
+            // Flexible regex to catch "Q1:", "Q:", "Question 1:", "Q.", etc. (case-insensitive)
+            if (line.matches("(?i)^(question\\s*\\d*|[Qq])([\\.:)]\\s*|\\s+).*")) {
+                // If we were already building a question, save it before starting the new one
                 if (currentQ != null) {
                     questionListModel.addElement(currentQ);
-                    answersList.add("<b>Answer:</b><br><br>" + currentA.toString().trim());
+                    answersList.add("<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "See study notes."));
                     count++;
                     currentA.setLength(0);
                 }
-                currentQ = line.substring(2).trim();
-            } else if (line.startsWith("A:")) {
-                currentA.append(line.substring(2).trim()).append("<br>");
-            } else if (currentQ != null && !line.isEmpty()) {
+                // Strip the Q prefix tag cleanly
+                currentQ = line.replaceFirst("(?i)^(question\\s*\\d*|[Qq])[\\.:)]?\\s*", "").trim();
+            } 
+            // Flexible regex to catch "A:", "Answer:", "Ans:", etc.
+            else if (line.matches("(?i)^(answer|ans)([\\.:)]\\s*|\\s+).*")) {
+                String ansText = line.replaceFirst("(?i)^(answer|ans)[\\.:)]?\\s*", "").trim();
+                currentA.append(ansText).append("<br>");
+            } 
+            // If we are currently inside an answer block, keep appending text lines
+            else if (currentQ != null) {
                 currentA.append(line).append("<br>");
             }
         }
 
-        // Add final queued question
+        // Save the final pending question in the file
         if (currentQ != null) {
             questionListModel.addElement(currentQ);
-            answersList.add("<b>Answer:</b><br><br>" + currentA.toString().trim());
+            answersList.add("<b>Answer:</b><br><br>" + (currentA.length() > 0 ? currentA.toString().trim() : "See study notes."));
             count++;
         }
+
         return count;
     }
 
