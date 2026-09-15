@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 15, 2026 at 03:01 PM
+-- Generation Time: Sep 15, 2026 at 04:58 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -52,8 +52,8 @@ INSERT INTO `student_login` (`id`, `username`, `password`, `email`) VALUES
 CREATE TABLE `user_quiz_history` (
   `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
-  `actual_algorithm` varchar(100) NOT NULL,
-  `user_guess` varchar(100) NOT NULL,
+  `actual_algorithm` varchar(50) NOT NULL,
+  `user_guess` varchar(50) NOT NULL,
   `is_correct` tinyint(1) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -63,9 +63,8 @@ CREATE TABLE `user_quiz_history` (
 --
 
 INSERT INTO `user_quiz_history` (`id`, `username`, `actual_algorithm`, `user_guess`, `is_correct`, `timestamp`) VALUES
-(20, 'alan', 'Bucket Sort', 'Bucket Sort', 1, '2026-09-15 06:02:29'),
-(21, 'alan', 'Selection Sort', 'Bubble Sort', 0, '2026-09-15 06:03:01'),
-(22, 'alan', 'Heap Sort', 'Heap Sort', 1, '2026-09-15 07:39:20');
+(4, 'ALAN', 'Radix Sort', 'Merge Sort', 0, '2026-09-15 13:58:51'),
+(5, 'ALAN', 'Bubble Sort', 'Bubble Sort', 1, '2026-09-15 13:59:16');
 
 -- --------------------------------------------------------
 
@@ -88,7 +87,10 @@ CREATE TABLE `user_sort_history` (
 
 INSERT INTO `user_sort_history` (`id`, `username`, `algorithm_name`, `input_array`, `sorted_array`, `timestamp`) VALUES
 (54, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 06:01:50'),
-(55, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 07:38:37');
+(55, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 07:38:37'),
+(56, 'alan', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 13:19:21'),
+(57, 'ALAN', 'Bubble Sort', '[45, 12, 89, 23, 7, 67, 34]', '[7, 12, 23, 34, 45, 67, 89]', '2026-09-15 13:57:46'),
+(58, 'ALAN', 'Bubble Sort', '[51, 62, 31, 16, 20, 58, 70]', '[16, 20, 31, 51, 58, 62, 70]', '2026-09-15 13:58:28');
 
 --
 -- Indexes for dumped tables
@@ -126,13 +128,13 @@ ALTER TABLE `student_login`
 -- AUTO_INCREMENT for table `user_quiz_history`
 --
 ALTER TABLE `user_quiz_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `user_sort_history`
 --
 ALTER TABLE `user_sort_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
